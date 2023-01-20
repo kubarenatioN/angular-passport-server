@@ -4,14 +4,14 @@ const passport = require("passport");
 const router = Router();
 
 router.get(
-    "/list",
+    "/cards",
     passport.authenticate("jwt", {
         session: false,
         failureRedirect: "/auth/fail",
     }),
     (req, res, next) => {
         console.log("cards router req");
-        return res.status(200).json([]);
+        return res.status(200).json(['cards...']);
     }
 );
 

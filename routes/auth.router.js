@@ -1,15 +1,15 @@
 const Router = require('express').Router;
 const crypto = require('crypto')
-const db = require('../database/db.js')
+const userController = require('../controllers/user.controller')
 const jwt = require('jsonwebtoken')
 require('dotenv').config()
 
 const router = Router();
 const JWT_PRIVATE_KEY = process.env.JWT_PRIVATE_KEY
 
-router.post('/login/jwt', (req, res, next) => {
-    const { username, password } = req.body
-    db.find(username)
+router.post('/login/jwt', (req, res) => {
+    const { email, password } = req.body
+    userController.findByEmail(email) 
         .then(user => {
             if (!user) {
                 return res.status(401).json({
@@ -17,43 +17,53 @@ router.post('/login/jwt', (req, res, next) => {
                 })
             }
 
-            if (!comparePasswords(password, user.salt, user.password)) {
+            const { id, email, username, salt, password: hashedPassword } = user
+
+            if (!comparePasswords(password, salt, hashedPassword)) {
                 return res.status(401).json({
                     message: "Incorrect password."
                 })
             }
 
             const payload = {
-                id: user.id,
-                username: user.username,
+                id,
+                email,
+                username,
             }
             const token = jwt.sign(payload, JWT_PRIVATE_KEY, {
                 expiresIn: '7d',
             })
+            
             return res.status(200).json({
                 token: `Bearer ${token}`,
-                message: "Logged in successfully"
+                message: "Logged in successfully",
+                user: {
+                    id, email, username
+                }
             })
+        })
+        .catch(err => {
+            console.error(`Login error: ${err}`);
         })
 })
 
-router.post('/register', (req, res, next) => {
-    const { username, password } = req.body
+router.post('/register', (req, res) => {
+    const { email, password } = req.body
     const salt = createSalt()
     const hash = hashPassword(password, salt)
 
     const user = {
         salt,
-        username,
+        email,
         password: hash,
     }
 
-    db.add(user)
-        .then(user => {
-            console.log('111 registered user', user);
+    userController.createWithPromise(user)
+        .then(({ id, email, username }) => {
             res.status(200).json({
-                id: user.id,
-                username: user.username,
+                id,
+                email,
+                username,
             })
         })
 })
