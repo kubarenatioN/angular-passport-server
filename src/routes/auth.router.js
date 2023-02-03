@@ -72,13 +72,13 @@ router.post('/register', (req, res) => {
 
 /* Get User object by token */
 router.post('/user', (req, res) => {
-	let token = ''
+	let token = '';
 	try {
 		token = req.get('Authorization').split(' ')[1];
-	} catch(e) {
+	} catch (e) {
 		return res.status(400).json({
 			message: 'Incorrect token',
-			error: e
+			error: e,
 		});
 	}
 
@@ -114,4 +114,4 @@ function comparePasswords(password, salt, hashedPassword) {
 	return hashedPassword === hash;
 }
 
-module.exports = { authRouter: router };
+module.exports = router;
