@@ -18,7 +18,7 @@ router.post('/login/jwt', (req, res) => {
 				});
 			}
 
-			const { id, email, username, salt, password: hashedPassword } = user;
+			const { id, email, username, salt, password: hashedPassword, role } = user;
 
 			if (!comparePasswords(password, salt, hashedPassword)) {
 				return res.status(401).json({
@@ -30,6 +30,7 @@ router.post('/login/jwt', (req, res) => {
 				id,
 				email,
 				username,
+                role
 			};
 			const token = jwt.sign(payload, JWT_PRIVATE_KEY, {
 				expiresIn: '7d',
@@ -38,11 +39,7 @@ router.post('/login/jwt', (req, res) => {
 			return res.status(200).json({
 				token: `Bearer ${token}`,
 				message: 'Logged in successfully',
-				user: {
-					id,
-					email,
-					username,
-				},
+				user: payload
 			});
 		})
 		.catch((err) => {
