@@ -3,14 +3,28 @@ const { db } = require('../database/db')
 const table = 'courses'
 
 class CoursesController {
-    async get(req, res) {
+    get = async (req, res) => {
         const { status } = req.body;
         if (status) {
-            const courses = await db.query(`SELECT * FROM ${table} where status = $1`, [status])
-            return res.json(courses.rows)
+            const promises = []
+            status.forEach(status => {
+                const promise = db.query(`SELECT * FROM ${table} where status = $1`, [status])
+                promises.push(promise)
+            });
+            Promise.all(promises).then(coursesArray => {
+                const courses = {}
+                status.forEach((status, i) => {
+                    courses[status] = coursesArray[i].rows
+                })
+                return res.json(courses)
+            })
         }
-        const courses = await db.query(`SELECT * FROM ${table} where status = 'published'`)
-        res.json(courses.rows)
+        else {
+            const courses = await db.query(`SELECT * FROM ${table} where status = 'published'`)
+            return res.json({
+                published: courses.rows
+            })
+        }
     }
 
     async create(req, res) {
@@ -21,11 +35,12 @@ class CoursesController {
         res.json(newCourse.rows[0])
     }
 
-    async publish(req, res) {
+    publish = async (req, res) => {
         const { id } = req.body;
 
         const newCourse = await db.query(`UPDATE ${table} set status = 'published' where id = $1 RETURNING *`, [id])
-        res.json(newCourse.rows[0])
+        req.body.status = ['review']
+        return this.get(req, res)
     }
 
     // creator and admin can edit the same course while reviewing it

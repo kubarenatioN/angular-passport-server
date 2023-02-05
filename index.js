@@ -17,7 +17,6 @@ const PORT = process.env.PORT || 5000;
 
 
 const apiRouter = Router()
-apiRouter.use('/cards', cardsRouter)
 apiRouter.use('/courses', coursesRouter)
 app.use('/api', apiRouter)
 app.use('/auth', authRouter)

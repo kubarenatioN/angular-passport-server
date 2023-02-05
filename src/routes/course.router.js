@@ -12,7 +12,6 @@ router.post(
 	}),
 	(req, res, next) => {
 		const { status } = req.body;
-		console.log('1', status);
 		if (status) {
 			return checkAdminPermission(req, res, next);
 		}
