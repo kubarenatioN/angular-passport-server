@@ -4,7 +4,6 @@ const cors = require('cors')
 require('dotenv').config()
 require('./src/config/passport')
 const authRouter = require('./src/routes/auth.router')
-const cardsRouter = require('./src/routes/cards.router')
 const coursesRouter = require('./src/routes/course.router')
 const adminRouter = require('./src/routes/admin.router')
 

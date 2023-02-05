@@ -1,7 +1,9 @@
 const Router = require('express').Router;
 const crypto = require('crypto');
+const passport = require('passport');
+const { getRedirectWindowHtml } = require('../helpers/auth-redirect-window');
 const userController = require('../controllers/user.controller');
-const jwt = require('jsonwebtoken');
+const { signToken, verifyToken } = require('../helpers/token-helper');
 require('dotenv').config();
 
 const router = Router();
@@ -18,7 +20,12 @@ router.post('/login/jwt', (req, res) => {
 				});
 			}
 
-			const { id, email, username, salt, password: hashedPassword, role } = user;
+			const {
+				id,
+				email,
+				salt,
+				password: hashedPassword,
+			} = user;
 
 			if (!comparePasswords(password, salt, hashedPassword)) {
 				return res.status(401).json({
@@ -29,22 +36,52 @@ router.post('/login/jwt', (req, res) => {
 			const payload = {
 				id,
 				email,
-				username,
-                role
 			};
-			const token = jwt.sign(payload, JWT_PRIVATE_KEY, {
-				expiresIn: '7d',
-			});
+			const token = signToken(payload, JWT_PRIVATE_KEY);
 
 			return res.status(200).json({
-				token: `Bearer ${token}`,
+				token: token,
 				message: 'Logged in successfully',
-				user: payload
+				user: payload,
 			});
 		})
 		.catch((err) => {
 			console.error(`Login error: ${err}`);
 		});
+});
+
+router.get(
+	'/login/google',
+	passport.authenticate('google', {
+		scope: ['profile', 'email'],
+		session: false,
+	})
+);
+
+router.get(
+	'/google/callback',
+	(req, res, next) => {
+		console.log('google/callback');
+		next();
+	},
+	passport.authenticate('google', {
+		session: false,
+		successRedirect: '/auth/login/social/success',
+		failureRedirect: '/auth/login/failed',
+	})
+);
+
+router.get('/login/failed', (req, res) => {
+	return res.status(401).json({
+		message: 'Login failed',
+	});
+});
+
+router.get('/login/social/success', (req, res) => {
+	console.log('111 success', req.user);
+	const token = signToken({ email: 'test 123' }, JWT_PRIVATE_KEY);
+	const postBackUri = 'http://localhost:4200';
+	return res.send(getRedirectWindowHtml({ token, postBackUri }));
 });
 
 router.post('/register', (req, res) => {
@@ -79,7 +116,7 @@ router.post('/user', (req, res) => {
 		});
 	}
 
-	jwt.verify(token, JWT_PRIVATE_KEY, (err, user) => {
+	verifyToken(token, JWT_PRIVATE_KEY, (err, user) => {
 		if (err) {
 			return res.status(400).json({
 				message: 'Error while parsing token',
@@ -89,12 +126,6 @@ router.post('/user', (req, res) => {
 			user,
 			message: 'Success',
 		});
-	});
-});
-
-router.get('/fail', (req, res) => {
-	return res.status(401).json({
-		message: 'Not authorized',
 	});
 });
 

@@ -12,6 +12,26 @@ class UserController {
 
 		res.json(newUser.rows[0]);
 	}
+    
+	async createFromSocialAccount(user) {
+		const { email } = user;
+		const newUser = await db.query(
+			`INSERT into "${table}" (email, username, password, salt) values ($1, $1, $2, $3) RETURNING *`,
+			[email, password, salt]
+		);
+
+		res.json(newUser.rows[0]);
+	}
+    
+	async createFromObject(user) {
+		const { email, salt } = user;
+		const newUser = await db.query(
+			`INSERT into "${table}" (email, username, password, salt) values ($1, $1, $2, $3) RETURNING *`,
+			[email, password, salt]
+		);
+
+		res.json(newUser.rows[0]);
+	}
 
 	async createWithPromise(payload) {
 		const { email, password, salt } = payload;
