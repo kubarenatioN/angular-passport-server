@@ -22,7 +22,9 @@ passport.use(
 	new JwtStrategy(jwtOptions, async (jwtPayload, done) => {
 		console.log('111 jwt user data', jwtPayload);
 		if (jwtPayload) {
-			const user = await findUserByEmail(jwtPayload.email);
+			const user = await findUserByEmail(jwtPayload.email, {
+                isSocial: false
+            });
 			if (user) {
 				return done(null, user);
 			} else {
@@ -39,27 +41,34 @@ passport.use(
 		profile,
 		done
 	) => {
+        const { id } = profile
         const email = profile.emails[0].value
-        console.log('google', accessToken, refreshToken, email);
-        const user = await findUserByEmail(email);
-        console.log('user', user);
+        const photo = profile.photos[0].value
+        console.log('profile', id, photo, email);
+        const user = await findUserByEmail(email, {
+            isSocial: true
+        });
         if (user) {
             return done(null, user)
         }
         else {
-            // const user = await saveUser()
-            return done(null, {
-                email
+            const user = await saveUser({
+                socialId: id,
+                email,
+                photo,
+                username: email,
+                social: 'google'
             })
+            return done(null, user)
         }
 	})
 );
 
 
-async function findUserByEmail(email) {
-    return userController.findByEmail(email)
+async function findUserByEmail(email, options) {
+    return userController.findByEmail(email, options)
 } 
 
 async function saveUser(user) {
-    return userController.createFromObject(user)
+    return userController.createFromObject(user, options)
 }

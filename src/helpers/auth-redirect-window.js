@@ -12,8 +12,6 @@ const getRedirectWindowHtml = (data) => {
                 window.addEventListener(
                     'message',
                     function (e) {
-                        debugger;
-                        console.log('123 test asdasdasd', e)
                         if (
                             e.origin === '${postBackUri}' &&
                             e.data &&

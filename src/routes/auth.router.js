@@ -4,6 +4,7 @@ const passport = require('passport');
 const { getRedirectWindowHtml } = require('../helpers/auth-redirect-window');
 const userController = require('../controllers/user.controller');
 const { signToken, verifyToken } = require('../helpers/token-helper');
+const socialSuccessAuth = require('../middlewares/social-auth-success.middleware');
 require('dotenv').config();
 
 const router = Router();
@@ -24,6 +25,9 @@ router.post('/login/jwt', (req, res) => {
 				id,
 				email,
 				salt,
+                username,
+                photo,
+                role,
 				password: hashedPassword,
 			} = user;
 
@@ -36,6 +40,9 @@ router.post('/login/jwt', (req, res) => {
 			const payload = {
 				id,
 				email,
+                username,
+                photo,
+                role
 			};
 			const token = signToken(payload, JWT_PRIVATE_KEY);
 
@@ -54,21 +61,18 @@ router.get(
 	'/login/google',
 	passport.authenticate('google', {
 		scope: ['profile', 'email'],
+        prompt : 'select_account',
 		session: false,
 	})
 );
 
 router.get(
 	'/google/callback',
-	(req, res, next) => {
-		console.log('google/callback');
-		next();
-	},
 	passport.authenticate('google', {
 		session: false,
-		successRedirect: '/auth/login/social/success',
 		failureRedirect: '/auth/login/failed',
-	})
+	}),
+    socialSuccessAuth,
 );
 
 router.get('/login/failed', (req, res) => {
@@ -78,10 +82,13 @@ router.get('/login/failed', (req, res) => {
 });
 
 router.get('/login/social/success', (req, res) => {
-	console.log('111 success', req.user);
-	const token = signToken({ email: 'test 123' }, JWT_PRIVATE_KEY);
-	const postBackUri = 'http://localhost:4200';
-	return res.send(getRedirectWindowHtml({ token, postBackUri }));
+	// console.log('111 success', res.user);
+	// const token = signToken({ 
+    //     username: 'test username',
+    //     email: 'test 123'
+    // }, JWT_PRIVATE_KEY);
+	// const postBackUri = 'http://localhost:4200';
+	// return res.send(getRedirectWindowHtml({ token, postBackUri }));
 });
 
 router.post('/register', (req, res) => {
