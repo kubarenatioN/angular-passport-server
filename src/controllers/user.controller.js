@@ -13,19 +13,10 @@ class UserController {
 		res.json(newUser.rows[0]);
 	}
     
-	async createFromSocialAccount(user) {
-		const { email } = user;
-		const newUser = await db.query(
-			`INSERT into "${table}" (email, username, password, salt) values ($1, $1, $2, $3) RETURNING *`,
-			[email, password, salt]
-		);
-
-		res.json(newUser.rows[0]);
-	}
-    
-	async createFromObject(user, { isSocial }) {
+	async createFromObject(user) {
+        const isSocial = user.social != null
         if (!isSocial) {
-            const { email, salt } = user;
+            const { email, password, salt } = user;
             return db.query(
                 `INSERT into "${table}" (email, username, password, salt) values ($1, $1, $2, $3) RETURNING *`,
                 [email, password, salt]).then(res => res.rows[0]);
@@ -34,7 +25,7 @@ class UserController {
             const { email, photo, username, socialId, social } = user
             console.log('save social profile', user);
             return db.query(
-                `INSERT into "users-social" (email, username, photo, social, social_id) values ($1, $1, $2, $3, $4) RETURNING email, photo, username`,
+                `INSERT into "${table}" (email, username, photo, social_type, social_id) values ($1, $1, $2, $3, $4) RETURNING email, photo, username`,
                 [email, photo, social, socialId]).then(res => res.rows[0]);
         }
 	}
@@ -55,15 +46,9 @@ class UserController {
 		res.json(users.rows);
 	}
 
-	async findByEmail(email, options = { }) {
-        const { isSocial } = options
-        if (!isSocial) {
-            return db
-                .query(`SELECT * FROM "${table}" where email = $1`, [email])
-                .then((res) => res.rows[0]);
-        }
+	async findByEmail(email) {
         return db
-            .query(`SELECT * FROM "users-social" where email = $1`, [email])
+            .query(`SELECT * FROM "${table}" where email = $1`, [email])
             .then((res) => res.rows[0]);
 	}
 

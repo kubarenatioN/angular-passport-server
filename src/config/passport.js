@@ -65,10 +65,10 @@ passport.use(
 );
 
 
-async function findUserByEmail(email, options) {
-    return userController.findByEmail(email, options)
+async function findUserByEmail(email) {
+    return userController.findByEmail(email)
 } 
 
 async function saveUser(user) {
-    return userController.createFromObject(user, options)
+    return userController.createFromObject(user)
 }
