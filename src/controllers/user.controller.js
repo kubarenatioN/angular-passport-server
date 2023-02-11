@@ -25,7 +25,7 @@ class UserController {
             const { email, photo, username, socialId, social } = user
             console.log('save social profile', user);
             return db.query(
-                `INSERT into "${table}" (email, username, photo, social_type, social_id) values ($1, $1, $2, $3, $4) RETURNING email, photo, username`,
+                `INSERT into "${table}" (email, username, photo, social_type, social_id) values ($1, $1, $2, $3, $4) RETURNING id, email, photo, username, role`,
                 [email, photo, social, socialId]).then(res => res.rows[0]);
         }
 	}

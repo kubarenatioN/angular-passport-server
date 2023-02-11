@@ -6,12 +6,14 @@ const CLIENT_URL = 'http://localhost:4200'
 
 const JWT_PRIVATE_KEY = process.env.JWT_PRIVATE_KEY
 const socialSuccessAuth = (req, res) => {
-    console.log('socialSuccessAuth user', req.user);
-    const { email, username, photo } = req.user
+    // console.log('socialSuccessAuth user', req.user);
+    const { id, email, username, photo, role } = req.user
     const token = signToken({ 
-        username,
+        id,
         email,
-        photo
+        username,
+        photo,
+        role,
     }, JWT_PRIVATE_KEY);
     const postBackUri = CLIENT_URL;
     return res.send(getRedirectWindowHtml({ token, postBackUri }));

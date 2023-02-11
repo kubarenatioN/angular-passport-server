@@ -13,11 +13,42 @@ router.post(
 	(req, res, next) => {
 		const { status } = req.body;
 		if (status) {
-			return checkAdminPermission(req, res, next);
+            const { role } = req.user
+            if (role === 'admin' || role === 'teacher') {
+                return next()
+            }
+            return res.status(403).json({
+                message: 'No permission for user with such role.'
+            })
 		}
-		return next();
+		else {
+            return next();
+        }
+        // else {
+        //     return res.status(400).json({
+        //         message: 'No status specified.'
+        //     })
+        // }
 	},
 	coursesController.get
+);
+
+router.post(
+	'/author',
+	passport.authenticate('jwt', {
+		session: false,
+	}),
+	(req, res, next) => {
+        const { role } = req.user
+        if (!role || role === 'student') {
+            return res.status(403).json({
+                message: 'No permission for user with such role.'
+            })
+        }
+
+        return next()
+	},
+	coursesController.getByAuthorId
 );
 
 router.post(

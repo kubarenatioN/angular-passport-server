@@ -3,7 +3,6 @@ const JwtStrategy = require('passport-jwt').Strategy;
 const GoogleStrategy = require('passport-google-oauth20').Strategy;
 const ExtractJwt = require('passport-jwt').ExtractJwt;
 const userController = require('../controllers/user.controller');
-const { signToken, verifyToken } = require('../helpers/token-helper');
 require('dotenv').config();
 
 /* JWT */
@@ -44,7 +43,7 @@ passport.use(
         const { id } = profile
         const email = profile.emails[0].value
         const photo = profile.photos[0].value
-        console.log('profile', id, photo, email);
+        // console.log('profile', id, photo, email);
         const user = await findUserByEmail(email, {
             isSocial: true
         });
@@ -57,9 +56,13 @@ passport.use(
                 email,
                 photo,
                 username: email,
+                role: 'student',
                 social: 'google'
             })
-            return done(null, user)
+            return done(null, {
+                ...user,
+                id: user.id
+            })
         }
 	})
 );
