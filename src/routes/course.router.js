@@ -2,42 +2,31 @@ const Router = require('express').Router;
 const passport = require('passport');
 const coursesController = require('../controllers/course.controller');
 const { checkAdminPermission } = require('../middlewares/admin.middlewares');
+const authenticate = require('../middlewares/authenticate.middleware');
 
 const router = new Router();
 
-router.post(
+router.get(
 	'/',
-	passport.authenticate('jwt', {
-		session: false,
-	}),
-	(req, res, next) => {
-		const { status } = req.body;
-		if (status) {
-            const { role } = req.user
-            if (role === 'admin' || role === 'teacher') {
-                return next()
-            }
-            return res.status(403).json({
-                message: 'No permission for user with such role.'
-            })
-		}
-		else {
-            return next();
-        }
-        // else {
-        //     return res.status(400).json({
-        //         message: 'No status specified.'
-        //     })
-        // }
-	},
+	authenticate(),
 	coursesController.get
+);
+
+router.get(
+	'/review',
+	authenticate(),
+	coursesController.getOnReview
+);
+
+router.get(
+	'/review/history',
+	authenticate(),
+	coursesController.getCourseReviewHistory
 );
 
 router.post(
 	'/author',
-	passport.authenticate('jwt', {
-		session: false,
-	}),
+	authenticate(),
 	(req, res, next) => {
         const { role } = req.user
         if (!role || role === 'student') {
@@ -53,26 +42,20 @@ router.post(
 
 router.post(
 	'/create',
-	passport.authenticate('jwt', {
-		session: false,
-	}),
+	authenticate(),
 	coursesController.create
 );
 
 router.post(
 	'/publish',
-	passport.authenticate('jwt', {
-		session: false,
-	}),
+	authenticate(),
 	checkAdminPermission,
 	coursesController.publish
 );
 
 router.post(
 	'/edit',
-	passport.authenticate('jwt', {
-		session: false,
-	}),
+	authenticate(),
 	checkAdminPermission,
 	coursesController.edit
 );

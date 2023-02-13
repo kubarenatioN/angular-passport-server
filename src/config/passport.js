@@ -19,7 +19,7 @@ const googleOptions = {
 
 passport.use(
 	new JwtStrategy(jwtOptions, async (jwtPayload, done) => {
-		console.log('111 jwt user data', jwtPayload);
+		// console.log('111 jwt user data', jwtPayload);
 		if (jwtPayload) {
 			const user = await findUserByEmail(jwtPayload.email, {
                 isSocial: false
