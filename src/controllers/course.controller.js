@@ -26,10 +26,22 @@ class CoursesController {
     getByAuthorId = async (req, res) => {
         const { id } = req.body
         const publishedCourses = await db.query(`SELECT * FROM ${table} where "authorId" = $1`, [id])
-        const reviewCourses = await db.query(`SELECT * FROM "${reviewTable}" where "authorId" = $1 and "parentId" IS NULL`, [id])
+        const reviewCourses = await db.query(`SELECT * FROM "${reviewTable}" where "authorId" = $1`, [id])
+        const reviewChildren = []
+        const reviewParents = []
+        for (let i = 0; i < reviewCourses.rows.length; i++) {
+            const courseVersion = reviewCourses.rows[i];
+            if (courseVersion.parentId === null) {
+                reviewParents.push(courseVersion)
+            }
+            else {
+                reviewChildren.push(courseVersion)
+            }
+        }
         return res.json({
             published: publishedCourses.rows,
-            review: reviewCourses.rows,
+            review: reviewParents,
+            reviewChildren,
         })
     }
 
