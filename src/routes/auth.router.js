@@ -54,6 +54,11 @@ router.post('/login/jwt', (req, res) => {
 		})
 		.catch((err) => {
 			console.error(`Login error: ${err}`);
+            return res.status(500).json({
+				token: null,
+				user: null,
+                error: err
+			});
 		});
 });
 
