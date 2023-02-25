@@ -15,6 +15,13 @@ class CoursesController {
         return res.json(courses.rows)
     }
 
+    getOnReviewById = async (req, res) => {
+        const { id } = req.params
+        const queryString = `SELECT * FROM "${reviewTable}" where id = $1`
+        const course = await db.query(queryString, [id])
+        return res.json(course.rows[0])
+    }
+
     getCourseReviewHistory = async (req, res) => {
         const { id } = req.query
         const queryString = `SELECT * FROM "${reviewTable}" where "parentId" = $1 or id = $1 order by "createdAt" DESC`        
@@ -27,21 +34,9 @@ class CoursesController {
         const { id } = req.body
         const publishedCourses = await db.query(`SELECT * FROM ${table} where "authorId" = $1`, [id])
         const reviewCourses = await db.query(`SELECT * FROM "${reviewTable}" where "authorId" = $1`, [id])
-        const reviewChildren = []
-        const reviewParents = []
-        for (let i = 0; i < reviewCourses.rows.length; i++) {
-            const courseVersion = reviewCourses.rows[i];
-            if (courseVersion.parentId === null) {
-                reviewParents.push(courseVersion)
-            }
-            else {
-                reviewChildren.push(courseVersion)
-            }
-        }
         return res.json({
             published: publishedCourses.rows,
-            review: reviewParents,
-            reviewChildren,
+            review: reviewCourses.rows,
         })
     }
 
@@ -50,6 +45,8 @@ class CoursesController {
         const { title, description, modules, authorId } = course
         const createdAt = new Date().toUTCString()
 
+        // const courses = await db.query(`SELECT * from "${reviewTable}"`)
+        // console.log(courses.rows);
         const newCourse = await db.query(`INSERT into "${reviewTable}" (title, description, "modulesJson", "authorId", "createdAt") values ($1, $2, $3, $4, $5) RETURNING *`, [title, description, modules, authorId, createdAt])
         res.json(newCourse.rows[0])
     }
@@ -57,6 +54,11 @@ class CoursesController {
     publish = async (req, res) => {
         const { id } = req.body;
         return res.json('Write me!')
+    }
+
+    updateReviewCourse = async (req, res) => {
+        const { id } = req.body;
+        return res.json('Update me!', id)
     }
 
     // creator will edit the same course while admin is reviewing it

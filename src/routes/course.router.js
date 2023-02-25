@@ -1,7 +1,6 @@
 const Router = require('express').Router;
 const passport = require('passport');
 const coursesController = require('../controllers/course.controller');
-const { checkAdminPermission } = require('../middlewares/admin.middlewares');
 const authenticate = require('../middlewares/authenticate.middleware');
 
 const router = new Router();
@@ -10,12 +9,6 @@ router.get(
 	'/',
 	authenticate(),
 	coursesController.get
-);
-
-router.get(
-	'/review',
-	authenticate(),
-	coursesController.getOnReview
 );
 
 router.get(
@@ -46,18 +39,18 @@ router.post(
 	coursesController.create
 );
 
-router.post(
-	'/publish',
-	authenticate(),
-	checkAdminPermission,
-	coursesController.publish
-);
+// router.post(
+// 	'/publish',
+// 	authenticate(),
+// 	checkAdminPermission,
+// 	coursesController.publish
+// );
 
-router.post(
-	'/edit',
-	authenticate(),
-	checkAdminPermission,
-	coursesController.edit
-);
+// router.post(
+// 	'/edit',
+// 	authenticate(),
+// 	checkAdminPermission,
+// 	coursesController.edit
+// );
 
 module.exports = router;
