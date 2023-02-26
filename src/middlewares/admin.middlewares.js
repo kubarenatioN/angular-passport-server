@@ -1,5 +1,4 @@
 function isAdmin(req, res, next) {
-    console.log('is admin', req.user);
     const { role } = req.user
     if (role === 'admin') {
         return next()

@@ -19,8 +19,8 @@ coursesRouter.get(
 );
 
 coursesRouter.put(
-    '/',
-    coursesController.updateReviewCourse
+    '/review/update',
+    coursesController.updateCourseReview
 );
 
 /* ADMIN COURSES ROUTES END */

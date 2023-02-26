@@ -3,6 +3,12 @@ const { db } = require('../database/db')
 const table = 'courses'
 const reviewTable = 'courses-review'
 
+const reviewStatuses = {
+    reviewed: 'Reviewed',
+    readyForReview: 'ReadyForReview',
+    readyForUpdate: 'ReadyForUpdate',
+}
+
 class CoursesController {
     get = async (req, res) => {
         const courses = await db.query(`SELECT * FROM ${table}`)
@@ -56,9 +62,14 @@ class CoursesController {
         return res.json('Write me!')
     }
 
-    updateReviewCourse = async (req, res) => {
-        const { id } = req.body;
-        return res.json('Update me!', id)
+    updateCourseReview = async (req, res) => {
+        const { id, comments } = req.body;
+        const query = `UPDATE "${reviewTable}" SET "editorCommentsJson" = $1, "status" = $2 WHERE id = $3`
+        const payload = [comments, reviewStatuses.readyForUpdate, id]
+        const course = await db.query(query, payload)
+        return res.status(200).json({
+            message: 'Success',
+        })
     }
 
     // creator will edit the same course while admin is reviewing it
