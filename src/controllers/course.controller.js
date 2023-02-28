@@ -47,13 +47,17 @@ class CoursesController {
     }
 
     async create(req, res) {
-        const { course } = req.body;
-        const { title, description, modules, authorId } = course
+        const { course, isParent } = req.body;
+        const { id, title, description, modulesJson, authorId } = course
         const createdAt = new Date().toUTCString()
+        const parentId = isParent ? null : course.parentId
 
-        // const courses = await db.query(`SELECT * from "${reviewTable}"`)
-        // console.log(courses.rows);
-        const newCourse = await db.query(`INSERT into "${reviewTable}" (title, description, "modulesJson", "authorId", "createdAt") values ($1, $2, $3, $4, $5) RETURNING *`, [title, description, modules, authorId, createdAt])
+        console.log(course, parentId);
+
+        const newCourse = await db.query(`INSERT into "${reviewTable}" (title, description, "modulesJson", "authorId", "createdAt", "parentId") values ($1, $2, $3, $4, $5, $6) RETURNING *`, [title, description, modulesJson, authorId, createdAt, parentId])
+
+        await db.query(`UPDATE "${reviewTable}" SET status = $1 WHERE id = $2`, [reviewStatuses.reviewed, id])
+
         res.json(newCourse.rows[0])
     }
 
