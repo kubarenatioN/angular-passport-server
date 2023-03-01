@@ -16,7 +16,7 @@ class CoursesController {
     }
 
     getOnReview = async (req, res) => {
-        const queryString = `SELECT * FROM "${reviewTable}" where "parentId" IS NULL order by "createdAt" ASC`
+        const queryString = `SELECT * FROM "${reviewTable}" where "masterId" IS NULL order by "createdAt" ASC`
         const courses = await db.query(queryString)
         return res.json(courses.rows)
     }
@@ -30,7 +30,7 @@ class CoursesController {
 
     getCourseReviewHistory = async (req, res) => {
         const { id } = req.query
-        const queryString = `SELECT * FROM "${reviewTable}" where "parentId" = $1 or id = $1 order by "createdAt" DESC`        
+        const queryString = `SELECT * FROM "${reviewTable}" where "masterId" = $1 or id = $1 order by "createdAt" DESC`        
         const payload = [id]
         const courses = await db.query(queryString, payload)
         return res.json(courses.rows)
@@ -47,14 +47,14 @@ class CoursesController {
     }
 
     async create(req, res) {
-        const { course, isParent } = req.body;
+        const { course, isMaster } = req.body;
         const { id, title, description, modulesJson, authorId } = course
         const createdAt = new Date().toUTCString()
-        const parentId = isParent ? null : course.parentId
+        const masterId = isMaster ? null : course.masterId
 
-        console.log(course, parentId);
+        console.log(course, masterId);
 
-        const newCourse = await db.query(`INSERT into "${reviewTable}" (title, description, "modulesJson", "authorId", "createdAt", "parentId") values ($1, $2, $3, $4, $5, $6) RETURNING *`, [title, description, modulesJson, authorId, createdAt, parentId])
+        const newCourse = await db.query(`INSERT into "${reviewTable}" (title, description, "modulesJson", "authorId", "createdAt", "masterId") values ($1, $2, $3, $4, $5, $6) RETURNING *`, [title, description, modulesJson, authorId, createdAt, masterId])
 
         await db.query(`UPDATE "${reviewTable}" SET status = $1 WHERE id = $2`, [reviewStatuses.reviewed, id])
 
