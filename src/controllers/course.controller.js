@@ -51,19 +51,31 @@ class CoursesController {
         const { id, title, description, modulesJson, authorId } = course
         const createdAt = new Date().toUTCString()
         const masterId = isMaster ? null : course.masterId
-
-        console.log(course, masterId);
-
-        const newCourse = await db.query(`INSERT into "${reviewTable}" (title, description, "modulesJson", "authorId", "createdAt", "masterId") values ($1, $2, $3, $4, $5, $6) RETURNING *`, [title, description, modulesJson, authorId, createdAt, masterId])
+        console.log('111 create id', id);
+        const result = await db.query(`INSERT into "${reviewTable}" (title, description, "modulesJson", "authorId", "createdAt", "masterId") values ($1, $2, $3, $4, $5, $6) RETURNING *`, [title, description, modulesJson, authorId, createdAt, masterId])
+        const newCourse = result.rows[0]
 
         await db.query(`UPDATE "${reviewTable}" SET status = $1 WHERE id = $2`, [reviewStatuses.reviewed, id])
 
-        res.json(newCourse.rows[0])
+        res.status(200).json(newCourse)
     }
 
     publish = async (req, res) => {
-        const { id } = req.body;
-        return res.json('Write me!')
+        const { course, masterId } = req.body;
+        const { title, description, modulesJson, authorId } = course
+        const createdAt = new Date().toUTCString()
+
+        const insertQuery = `INSERT INTO "${table}" (title, description, "modulesJson", "authorId", "createdAt") values ($1, $2, $3, $4, $5) RETURNING *`
+
+        const result = await db.query(insertQuery, [title, description, modulesJson, authorId, createdAt])
+
+        const clearReviewQuery = `DELETE FROM "${reviewTable}" WHERE id = $1 OR "masterId" = $1`
+        await db.query(clearReviewQuery, [masterId])
+
+        return res.status(200).json({
+            message: 'Success',
+            course: result.rows[0]
+        })
     }
 
     updateCourseReview = async (req, res) => {
@@ -82,6 +94,7 @@ class CoursesController {
 
         res.json({})
     }
+
 }
 
 const controller = new CoursesController()

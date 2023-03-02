@@ -23,6 +23,11 @@ coursesRouter.put(
     coursesController.updateCourseReview
 );
 
+coursesRouter.post(
+    '/publish',
+    coursesController.publish
+);
+
 /* ADMIN COURSES ROUTES END */
 
 router.use('/courses', coursesRouter)
