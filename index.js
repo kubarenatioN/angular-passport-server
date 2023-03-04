@@ -10,11 +10,11 @@ const isAdmin = require('./src/middlewares/admin.middlewares')
 const authenticate = require('./src/middlewares/authenticate.middleware')
 
 const app = express()
+const PORT = process.env.PORT || 5000;
 
 app.use(cors())
 app.use(express.json())
-
-const PORT = process.env.PORT || 5000;
+app.use('/static', express.static('public'))
 
 const apiRouter = Router()
 apiRouter.use('/courses', coursesRouter)

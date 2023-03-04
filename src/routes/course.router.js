@@ -8,7 +8,13 @@ const router = new Router();
 router.get(
 	'/',
 	authenticate(),
-	coursesController.get
+	coursesController.getAll
+);
+
+router.get(
+	'/:id',
+	authenticate(),
+	coursesController.getById
 );
 
 router.get(
