@@ -2,6 +2,7 @@ const Router = require('express').Router;
 const passport = require('passport');
 const coursesController = require('../controllers/course.controller');
 const authenticate = require('../middlewares/authenticate.middleware');
+const isTeacher = require('../middlewares/teacher-perm.middleware');
 
 const router = new Router();
 
@@ -24,24 +25,22 @@ router.get(
 );
 
 router.post(
-	'/author',
+	'/teacher',
 	authenticate(),
-	(req, res, next) => {
-        const { role } = req.user
-        if (!role || role === 'student') {
-            return res.status(403).json({
-                message: 'No permission for user with such role.'
-            })
-        }
-
-        return next()
-	},
+    isTeacher,
 	coursesController.getByAuthorId
+);
+
+router.post(
+	'/student',
+	authenticate(),
+	coursesController.getStudentCourses
 );
 
 router.post(
 	'/create',
 	authenticate(),
+    isTeacher,
 	coursesController.create
 );
 

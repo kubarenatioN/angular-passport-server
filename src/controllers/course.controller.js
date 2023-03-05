@@ -164,6 +164,28 @@ class CoursesController {
         }
     }
 
+    getStudentCourses = async (req, res) => {
+        const { userId } = req.body
+        if (!userId) {
+            return res.status(400).json({
+                message: 'No user ID was provided.'
+            })
+        }
+
+        const queryString = `
+            SELECT "${table}".*, "${usersCourses}"."status"
+            FROM "${table}" 
+            JOIN "${usersCourses}" ON "${usersCourses}"."courseId" = "${table}"."id"
+            WHERE "${usersCourses}"."userId" = $1
+        `
+        const payload = [userId]
+
+        const { rows } = await db.query(queryString, payload);
+        return res.status(200).json({
+            data: rows,
+            message: 'Success'
+        })
+    }
 }
 
 const controller = new CoursesController()
