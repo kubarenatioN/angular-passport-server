@@ -45,6 +45,12 @@ router.post(
 	coursesController.create
 );
 
+router.post(
+    '/enroll',
+    authenticate(),
+    coursesController.enroll
+)
+
 // router.post(
 // 	'/publish',
 // 	authenticate(),

@@ -1,12 +1,20 @@
 const { db } = require('../database/db')
+const format = require('pg-format');
 
 const table = 'courses'
 const reviewTable = 'courses-review'
+const usersCourses = 'users-courses'
 
 const reviewStatuses = {
     reviewed: 'Reviewed',
     readyForReview: 'ReadyForReview',
     readyForUpdate: 'ReadyForUpdate',
+}
+
+const enrollStatuses = {
+    pending: 'Pending',
+    approved: 'Approved',
+    rejected: 'Rejected',
 }
 
 class CoursesController {
@@ -112,6 +120,48 @@ class CoursesController {
         const { course } = req.body;
 
         res.json({})
+    }
+
+    enroll = async (req, res) => {
+        const { courseId, userIds, action } = req.body
+
+        let queryString = ''
+        let payload = []
+        let data
+        if (action === 'enroll') {
+            let { rows } = await db.query(`SELECT * FROM "${usersCourses}" WHERE "userId" = ANY($1::int[]) AND "courseId" = $2`, [userIds, courseId])
+
+            if (rows.length > 0) {
+                return res.status(400).json({
+                    message: 'Try to insert already existed data',
+                    data: rows
+                })
+            }
+            data = userIds.map(userId => [userId, courseId, enrollStatuses.pending])
+            queryString = format(`INSERT INTO "${usersCourses}" ("userId", "courseId", "status") VALUES %L RETURNING "userId"`, data);
+        }
+        else if (action === 'approve') {
+            queryString = `UPDATE "${usersCourses}" SET status = $1 WHERE "userId" = ANY($2::int[]) AND "courseId" = $3 RETURNING "userId"`  
+            payload = [enrollStatuses.approved, userIds, courseId]
+        }
+        else if (action === 'reject') {
+            queryString = `UPDATE "${usersCourses}" SET status = $1 WHERE "userId" = ANY($2::int[]) AND "courseId" = $3 RETURNING "userId"`  
+            payload = [enrollStatuses.rejected, userIds, courseId]
+        }
+        else if (action === 'lookup') {
+            queryString = `SELECT * FROM "${usersCourses}" WHERE "userId" = ANY($1::int[]) AND "courseId" = $2`
+            payload = [userIds, courseId]
+        }
+
+        if (action) {
+            const { rows } = await db.query(queryString, payload)
+
+            return res.status(200).json({
+                data: rows,
+                message: 'Success',
+                action,
+            })
+        }
     }
 
 }

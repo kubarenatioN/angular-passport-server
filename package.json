@@ -21,6 +21,7 @@
     "passport-jwt": "^4.0.1",
     "passport-local": "^1.0.0",
     "passport-twitter": "^1.0.4",
-    "pg": "^8.8.0"
+    "pg": "^8.8.0",
+    "pg-format": "^1.0.4"
   }
 }
