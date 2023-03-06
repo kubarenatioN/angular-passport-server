@@ -1,5 +1,6 @@
 const { db } = require('../database/db')
 const format = require('pg-format');
+const { getCurrentUTCTime } = require('../helpers/time.helper');
 
 const table = 'courses'
 const reviewTable = 'courses-review'
@@ -76,7 +77,7 @@ class CoursesController {
     async create(req, res) {
         const { course, isMaster } = req.body;
         const { id, title, description, category, startDate, endDate, modulesJson, authorId } = course
-        const createdAt = new Date().toUTCString()
+        const createdAt = getCurrentUTCTime()
         const masterId = isMaster ? null : course.masterId
 
         const result = await db.query(`INSERT into "${reviewTable}" (title, description, category, "startDate", "endDate", "modulesJson", "authorId", "createdAt", "masterId") values ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING *`, [title, description, category, startDate, endDate, modulesJson, authorId, createdAt, masterId])
@@ -90,7 +91,7 @@ class CoursesController {
     publish = async (req, res) => {
         const { course, masterId } = req.body;
         const { title, description, category, startDate, endDate, modulesJson, authorId } = course
-        const createdAt = new Date().toUTCString()
+        const createdAt = getCurrentUTCTime()
 
         const insertQuery = `INSERT INTO "${table}" (title, description, category, "startDate", "endDate", "modulesJson", "authorId", "createdAt") values ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING *`
 
@@ -128,6 +129,7 @@ class CoursesController {
         let queryString = ''
         let payload = []
         let data
+        const createdAt = getCurrentUTCTime()
         if (action === 'enroll') {
             let { rows } = await db.query(`SELECT * FROM "${usersCourses}" WHERE "userId" = ANY($1::int[]) AND "courseId" = $2`, [userIds, courseId])
 
@@ -137,16 +139,16 @@ class CoursesController {
                     data: rows
                 })
             }
-            data = userIds.map(userId => [userId, courseId, enrollStatuses.pending])
-            queryString = format(`INSERT INTO "${usersCourses}" ("userId", "courseId", "status") VALUES %L RETURNING "userId"`, data);
+            data = userIds.map(userId => [userId, courseId, enrollStatuses.pending, createdAt])
+            queryString = format(`INSERT INTO "${usersCourses}" ("userId", "courseId", "status", created_at) VALUES %L RETURNING "userId"`, data);
         }
         else if (action === 'approve') {
-            queryString = `UPDATE "${usersCourses}" SET status = $1 WHERE "userId" = ANY($2::int[]) AND "courseId" = $3 RETURNING "userId"`  
-            payload = [enrollStatuses.approved, userIds, courseId]
+            queryString = `UPDATE "${usersCourses}" SET status = $1, created_at = $4 WHERE "userId" = ANY($2::int[]) AND "courseId" = $3 RETURNING "userId"`  
+            payload = [enrollStatuses.approved, userIds, courseId, createdAt]
         }
         else if (action === 'reject') {
-            queryString = `UPDATE "${usersCourses}" SET status = $1 WHERE "userId" = ANY($2::int[]) AND "courseId" = $3 RETURNING "userId"`  
-            payload = [enrollStatuses.rejected, userIds, courseId]
+            queryString = `UPDATE "${usersCourses}" SET status = $1, created_at = $4 WHERE "userId" = ANY($2::int[]) AND "courseId" = $3 RETURNING "userId"`  
+            payload = [enrollStatuses.rejected, userIds, courseId, createdAt]
         }
         else if (action === 'lookup') {
             queryString = `SELECT * FROM "${usersCourses}" WHERE "userId" = ANY($1::int[]) AND "courseId" = $2`
@@ -185,6 +187,47 @@ class CoursesController {
             data: rows,
             message: 'Success'
         })
+    }
+
+    getCourseMembers = async (req, res) => {
+        const { type, status, courseId } = req.query
+        let queryString;
+        let payload;
+        if (type === 'list') {
+            let { size, page } = req.query
+            size = Number(size)
+            page = Number(page)
+            const statuses = status.split(',')
+            const from = size * page
+            const to = from + size
+
+            // TODO: add order by creation time, to get most recent items
+            queryString = `
+                WITH subquery AS (
+                    SELECT *, ROW_NUMBER() OVER (PARTITION BY status ORDER BY id) row_number
+                    FROM "users-courses"
+                    WHERE "courseId" = $3 AND status IN (
+                        SELECT * 
+                        FROM unnest(enum_range(NULL::"CourseEnrollmentStatus")) as sts(name)
+                        WHERE name::text = ANY($4)
+                    )
+                )
+                SELECT *
+                FROM subquery
+                WHERE row_number <= $2 AND row_number > $1;
+            `
+            payload = [from, to, courseId, statuses]
+        }
+
+        if (queryString) {
+            const { rows } = await db.query(queryString, payload)
+            return res.status(200).json({
+                data: rows,
+                message: 'Success',
+            })
+        } else {
+            return res.json({})
+        }
     }
 }
 

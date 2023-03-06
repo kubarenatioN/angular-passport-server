@@ -7,6 +7,13 @@ const isTeacher = require('../middlewares/teacher-perm.middleware');
 const router = new Router();
 
 router.get(
+    '/members',
+    authenticate(),
+    isTeacher,
+    coursesController.getCourseMembers
+)
+
+router.get(
 	'/',
 	authenticate(),
 	coursesController.getAll
@@ -49,19 +56,5 @@ router.post(
     authenticate(),
     coursesController.enroll
 )
-
-// router.post(
-// 	'/publish',
-// 	authenticate(),
-// 	checkAdminPermission,
-// 	coursesController.publish
-// );
-
-// router.post(
-// 	'/edit',
-// 	authenticate(),
-// 	checkAdminPermission,
-// 	coursesController.edit
-// );
 
 module.exports = router;
