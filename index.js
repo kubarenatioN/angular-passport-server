@@ -6,6 +6,7 @@ require('./src/config/passport')
 const authRouter = require('./src/routes/auth.router')
 const coursesRouter = require('./src/routes/course.router')
 const adminRouter = require('./src/routes/admin.router')
+const userRouter = require('./src/routes/user.router')
 const isAdmin = require('./src/middlewares/admin.middlewares')
 const authenticate = require('./src/middlewares/authenticate.middleware')
 
@@ -21,6 +22,7 @@ apiRouter.use('/courses', coursesRouter)
 // apiRouter.use('/boards', boardsRouter)
 
 app.use('/api', apiRouter)
+app.use('/user', userRouter)
 app.use('/auth', authRouter)
 app.use(
     '/admin',

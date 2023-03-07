@@ -142,6 +142,10 @@ class CoursesController {
             data = userIds.map(userId => [userId, courseId, enrollStatuses.pending, createdAt])
             queryString = format(`INSERT INTO "${usersCourses}" ("userId", "courseId", "status", created_at) VALUES %L RETURNING "userId"`, data);
         }
+        else if (action === 'lookup') {
+            queryString = `SELECT * FROM "${usersCourses}" WHERE "userId" = ANY($1::int[]) AND "courseId" = $2`
+            payload = [userIds, courseId]
+        }
         else if (action === 'approve') {
             queryString = `UPDATE "${usersCourses}" SET status = $1, created_at = $4 WHERE "userId" = ANY($2::int[]) AND "courseId" = $3 RETURNING "userId"`  
             payload = [enrollStatuses.approved, userIds, courseId, createdAt]
@@ -150,10 +154,11 @@ class CoursesController {
             queryString = `UPDATE "${usersCourses}" SET status = $1, created_at = $4 WHERE "userId" = ANY($2::int[]) AND "courseId" = $3 RETURNING "userId"`  
             payload = [enrollStatuses.rejected, userIds, courseId, createdAt]
         }
-        else if (action === 'lookup') {
-            queryString = `SELECT * FROM "${usersCourses}" WHERE "userId" = ANY($1::int[]) AND "courseId" = $2`
+        else if (action === 'cancel') {
+            queryString = `DELETE FROM "${usersCourses}" WHERE "userId" = ANY($1::int[]) AND "courseId" = $2 RETURNING "userId"`  
             payload = [userIds, courseId]
         }
+        
 
         if (action) {
             const { rows } = await db.query(queryString, payload)
@@ -190,9 +195,10 @@ class CoursesController {
     }
 
     getCourseMembers = async (req, res) => {
-        const { type, status, courseId } = req.query
+        const { type, status } = req.query
         let queryString;
         let payload;
+        const courseId = Number(req.query.courseId)
         if (type === 'list') {
             let { size, page } = req.query
             size = Number(size)
@@ -212,8 +218,9 @@ class CoursesController {
                         WHERE name::text = ANY($4)
                     )
                 )
-                SELECT *
-                FROM subquery
+                SELECT subquery.status, users.username, users.id, users.photo, users.email
+                FROM subquery INNER JOIN "users-test" users
+                ON subquery."userId" = users.id
                 WHERE row_number <= $2 AND row_number > $1;
             `
             payload = [from, to, courseId, statuses]
@@ -221,9 +228,16 @@ class CoursesController {
 
         if (queryString) {
             const { rows } = await db.query(queryString, payload)
+            const result = {
+                pending: rows.filter(user => user.status === enrollStatuses.pending),
+                approved: rows.filter(user => user.status === enrollStatuses.approved),
+                rejected: rows.filter(user => user.status === enrollStatuses.rejected),
+            }
             return res.status(200).json({
-                data: rows,
+                data: result,
                 message: 'Success',
+                courseId,
+                type
             })
         } else {
             return res.json({})

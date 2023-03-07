@@ -40,10 +40,12 @@ class UserController {
 			.then((newUser) => newUser.rows[0]);
 	}
 
-	async get(req, res) {
+	async getById(req, res) {
 		const { id } = req.params;
-		const users = await db.query(`SELECT * FROM ${table} where id = $1`, [id]);
-		res.json(users.rows);
+		const { rows } = await db.query(`SELECT id, username, photo, email, role FROM "${table}" where id = $1`, [id]);
+		res.status(200).json({
+            data: rows[0]
+        });
 	}
 
 	async findByEmail(email) {
