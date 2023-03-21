@@ -76,11 +76,11 @@ class CoursesController {
 
     async create(req, res) {
         const { course, isMaster } = req.body;
-        const { id, title, description, category, startDate, endDate, modulesJson, authorId } = course
+        const { id, secondaryId, title, description, category, startDate, endDate, modulesJson, authorId } = course
         const createdAt = getCurrentUTCTime()
         const masterId = isMaster ? null : course.masterId
 
-        const result = await db.query(`INSERT into "${reviewTable}" (title, description, category, "startDate", "endDate", "modulesJson", "authorId", "createdAt", "masterId") values ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING *`, [title, description, category, startDate, endDate, modulesJson, authorId, createdAt, masterId])
+        const result = await db.query(`INSERT into "${reviewTable}" ("secondaryId", title, description, category, "startDate", "endDate", "modulesJson", "authorId", "createdAt", "masterId") values ($10, $1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING *`, [title, description, category, startDate, endDate, modulesJson, authorId, createdAt, masterId, secondaryId])
         const newCourse = result.rows[0]
 
         await db.query(`UPDATE "${reviewTable}" SET status = $1 WHERE id = $2`, [reviewStatuses.reviewed, id])
@@ -90,12 +90,12 @@ class CoursesController {
 
     publish = async (req, res) => {
         const { course, masterId } = req.body;
-        const { title, description, category, startDate, endDate, modulesJson, authorId } = course
+        const { title, description, category, startDate, endDate, modulesJson, authorId, secondaryId } = course
         const createdAt = getCurrentUTCTime()
 
-        const insertQuery = `INSERT INTO "${table}" (title, description, category, "startDate", "endDate", "modulesJson", "authorId", "createdAt") values ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING *`
+        const insertQuery = `INSERT INTO "${table}" (title, description, category, "startDate", "endDate", "modulesJson", "authorId", "createdAt", "secondaryId") values ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING *`
 
-        const result = await db.query(insertQuery, [title, description, category, startDate, endDate, modulesJson, authorId, createdAt])
+        const result = await db.query(insertQuery, [title, description, category, startDate, endDate, modulesJson, authorId, createdAt, secondaryId])
 
         const clearReviewQuery = `DELETE FROM "${reviewTable}" WHERE id = $1 OR "masterId" = $1`
         await db.query(clearReviewQuery, [masterId])
