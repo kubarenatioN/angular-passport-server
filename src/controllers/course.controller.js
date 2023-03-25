@@ -76,14 +76,29 @@ class CoursesController {
 
     async create(req, res) {
         const { course, isMaster } = req.body;
-        const { id, secondaryId, title, description, category, startDate, endDate, modulesJson, authorId } = course
+        const {
+            id,
+            secondaryId,
+            title,
+            description,
+            category,
+            modulesJson,
+            authorId
+        } = course
         const createdAt = getCurrentUTCTime()
         const masterId = isMaster ? null : course.masterId
 
-        const result = await db.query(`INSERT into "${reviewTable}" ("secondaryId", title, description, category, "startDate", "endDate", "modulesJson", "authorId", "createdAt", "masterId") values ($10, $1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING *`, [title, description, category, startDate, endDate, modulesJson, authorId, createdAt, masterId, secondaryId])
+        const result = await db.query(`
+            INSERT into "${reviewTable}" 
+            ("secondaryId", title, description, category, "modulesJson", "authorId", "createdAt", "masterId") 
+            values ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING *`, 
+            [secondaryId, title, description, category, modulesJson, authorId, createdAt, masterId]
+        )
         const newCourse = result.rows[0]
 
-        await db.query(`UPDATE "${reviewTable}" SET status = $1 WHERE id = $2`, [reviewStatuses.reviewed, id])
+        if (!isMaster) {
+            await db.query(`UPDATE "${reviewTable}" SET status = $1 WHERE id = $2`, [reviewStatuses.reviewed, id])
+        }
 
         res.status(200).json(newCourse)
     }
@@ -108,8 +123,9 @@ class CoursesController {
 
     updateCourseReview = async (req, res) => {
         const { id, comments } = req.body;
-        const query = `UPDATE "${reviewTable}" SET "editorCommentsJson" = $1, "status" = $2 WHERE id = $3`
-        const payload = [comments, reviewStatuses.readyForUpdate, id]
+        const { overallComments, modules } = comments;
+        const query = `UPDATE "${reviewTable}" SET "comments" = $1, "modulesJson" = $2, "status" = $3 WHERE id = $4`
+        const payload = [overallComments, modules, reviewStatuses.readyForUpdate, id]
         const course = await db.query(query, payload)
         return res.status(200).json({
             message: 'Success',
