@@ -88,7 +88,7 @@ class CoursesController {
 		const { course, isMaster } = req.body;
 		const {
 			id,
-			secondaryId,
+			uuid,
 			title,
 			description,
 			category,
@@ -104,10 +104,10 @@ class CoursesController {
 		const result = await db.query(
 			`
             INSERT into "${reviewTable}" 
-            ("secondaryId", title, description, category, "acquiredCompetencies", "requiredCompetencies", "modulesJson", "authorId", "createdAt", "masterId") 
+            ("uuid", title, description, category, "acquiredCompetencies", "requiredCompetencies", "modulesJson", "authorId", "createdAt", "masterId") 
             values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) RETURNING *`,
 			[
-				secondaryId,
+				uuid,
 				title,
 				description,
 				category,
@@ -143,14 +143,14 @@ class CoursesController {
 			requiredCompetencies,
 			modules,
 			authorId,
-			secondaryId,
+			uuid,
 		} = course;
 		const createdAt = getCurrentUTCTime();
 		const modulesJson = JSON.stringify(modules);
 
 		const insertQuery = `
             INSERT INTO "${table}" 
-            (title, description, category, "acquiredCompetencies", "requiredCompetencies", "modulesJson", "authorId", "createdAt", "secondaryId") 
+            (title, description, category, "acquiredCompetencies", "requiredCompetencies", "modulesJson", "authorId", "createdAt", "uuid") 
             values ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING *`;
 
 		const result = await db.query(insertQuery, [
@@ -162,7 +162,7 @@ class CoursesController {
 			modulesJson,
 			authorId,
 			createdAt,
-			secondaryId,
+			uuid,
 		]);
 
 		const clearReviewQuery = `DELETE FROM "${reviewTable}" WHERE id = $1 OR "masterId" = $1`;
