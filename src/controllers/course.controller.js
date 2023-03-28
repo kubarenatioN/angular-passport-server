@@ -76,11 +76,14 @@ class CoursesController {
 			`SELECT * FROM "${reviewTable}" where "authorId" = $1`,
 			[id]
 		);
+        
+        const data = {
+            published: parseModules(publishedCourses.rows),
+            review: parseModules(reviewCourses.rows),
+        };
+        
 		return res.json({
-			data: {
-				published: parseModules(publishedCourses.rows),
-				review: parseModules(reviewCourses.rows),
-			},
+            data,
 		});
 	};
 
@@ -100,8 +103,8 @@ class CoursesController {
 		const createdAt = getCurrentUTCTime();
 		const masterId = isMaster ? null : course.masterId;
 		const modulesJson = JSON.stringify(modules);
-		console.log(acquiredCompetencies, requiredCompetencies);
-		const result = await db.query(
+
+        const result = await db.query(
 			`
             INSERT into "${reviewTable}" 
             ("uuid", title, description, category, "acquiredCompetencies", "requiredCompetencies", "modulesJson", "authorId", "createdAt", "masterId") 
@@ -177,7 +180,7 @@ class CoursesController {
 	updateCourseReview = async (req, res) => {
 		const { id, comments } = req.body;
 		const { overallComments, modules } = comments;
-		const modulesJson = JSON.stringify(modules);
+		const modulesJson = modules;
 
 		const query = `UPDATE "${reviewTable}" SET "comments" = $1, "modulesJson" = $2, "status" = $3 WHERE id = $4`;
 		const payload = [
