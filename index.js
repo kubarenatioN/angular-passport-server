@@ -8,9 +8,9 @@ const coursesRouter = require('./src/routes/course.router')
 const adminRouter = require('./src/routes/admin.router')
 const userRouter = require('./src/routes/user.router')
 const uploadRouter = require('./src/routes/upload.router')
+const trainingRouter = require('./src/routes/training.router')
 const isAdmin = require('./src/middlewares/admin.middlewares')
 const authenticate = require('./src/middlewares/authenticate.middleware')
-const fileUpload = require('express-fileupload')
 
 const app = express()
 const PORT = process.env.PORT || 5000;
@@ -21,6 +21,7 @@ app.use('/static', express.static('public'))
  
 const apiRouter = Router()
 apiRouter.use('/courses', coursesRouter)
+apiRouter.use('/training', trainingRouter)
 // apiRouter.use('/boards', boardsRouter)
 
 app.use('/api', apiRouter)
