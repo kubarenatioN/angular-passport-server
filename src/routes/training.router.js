@@ -3,9 +3,9 @@ const trainingController = require('../controllers/training.controller');
 
 const router = Router()
 
-router.get(
-    '/test',
-    trainingController.test
+router.post(
+    '/answer',
+    trainingController.addAnswer
 );
 
 module.exports = router;

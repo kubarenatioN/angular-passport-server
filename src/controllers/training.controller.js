@@ -1,18 +1,15 @@
 const fs = require('../database/firestore');
 
+const trainingAnswers = fs.collection('trainingAnswers')
+const trainingThreads = fs.collection('trainingAnswers')
 class TrainingController {
-    trainingThreadsCol = fs.collection('trainingThreads')
 
-    test = async (req, res) => {
-        const { id, path } = await this.trainingThreadsCol.add({
-            test: 'yes',
-            age: 123
-        })
+    addAnswer = async (req, res) => {
+        const { answer } = req.body
+
+        const docRef = await trainingAnswers.add(answer)
         return res.json({
-            doc: {
-                id,
-                path
-            }
+            docId: docRef.data()
         })
     }
 

@@ -1,6 +1,7 @@
 const express = require('express')
 const { Router } = require('express')
 const cors = require('cors')
+require('./src/config/mongoose.config')
 require('dotenv').config()
 require('./src/config/passport')
 const authRouter = require('./src/routes/auth.router')

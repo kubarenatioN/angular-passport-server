@@ -1,10 +1,21 @@
 const Router = require('express').Router;
 const passport = require('passport');
 const coursesController = require('../controllers/course.controller');
+const courseReviewController = require('../controllers/course-review.contoller');
 const authenticate = require('../middlewares/authenticate.middleware');
 const isTeacher = require('../middlewares/teacher-perm.middleware');
 
 const router = new Router();
+
+const reviewRouter = new Router();
+reviewRouter.post(
+    '/create', 
+    authenticate(),
+    isTeacher,
+    courseReviewController.createVersion
+)
+
+router.use('/review', reviewRouter)
 
 router.get(
     '/members',

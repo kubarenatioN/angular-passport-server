@@ -1,6 +1,11 @@
 const { db } = require('../database/db');
 const format = require('pg-format');
 const { getCurrentUTCTime } = require('../helpers/time.helper');
+// const { query, where } = require('firebase/firestore')
+const fs = require('../database/firestore');
+const courseRunsController = require('../controllers/course-runs.controller')
+const progressController = require('../controllers/progress.controller')
+const courseReviewController = require('../controllers/course-review.contoller')
 
 const table = 'courses';
 const reviewTable = 'courses-review';
@@ -28,8 +33,11 @@ class CoursesController {
 	};
 
 	getById = async (req, res) => {
-		const { id } = req.params;
-		const result = await db.query(`SELECT * FROM ${table} WHERE id = $1`, [id]);
+		const { id: courseRunId } = req.params;
+        console.log(courseRunId);
+        const courseRun = await courseRunsController.get(courseRunId)
+        console.log(courseRun.courseId);
+		const result = await db.query(`SELECT * FROM ${table} WHERE id = $1`, [courseRun.courseId]);
 		const data = parseModules(result.rows);
 		return res.status(200).json({
 			data: data[0],
@@ -124,6 +132,13 @@ class CoursesController {
 		);
 		const newCourse = parseModules(result.rows)[0];
 
+        const reviewVersionDocId = await courseReviewController.createVersion({
+            ...course,
+            createdAt,
+            masterId
+        })
+        console.log('new version in firebase!', reviewVersionDocId);
+
 		if (!isMaster) {
 			await db.query(`UPDATE "${reviewTable}" SET status = $1 WHERE id = $2`, [
 				reviewStatuses.reviewed,
@@ -170,6 +185,7 @@ class CoursesController {
 
 		const clearReviewQuery = `DELETE FROM "${reviewTable}" WHERE id = $1 OR "masterId" = $1`;
 		await db.query(clearReviewQuery, [masterId]);
+        await courseRunsController.createCourseRun(result[0])
 
 		return res.status(200).json({
 			message: 'Success',
