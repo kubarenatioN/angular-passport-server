@@ -1,7 +1,7 @@
 const express = require('express')
 const { Router } = require('express')
 const cors = require('cors')
-require('./src/config/mongoose.config')
+const { connectDB } = require('./src/config/mongoose.config')
 require('dotenv').config()
 require('./src/config/passport')
 const authRouter = require('./src/routes/auth.router')
@@ -36,7 +36,9 @@ app.use(
 )
 app.use('/upload', uploadRouter)
 
-app.listen(PORT, () => {
-    console.log(`Server is running on port ${PORT}...`);
+connectDB().then(() => {
+    app.listen(PORT, () => {
+        console.log(`Server is running on port ${PORT}...`);
+    })
 })
 
