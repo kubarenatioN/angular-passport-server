@@ -8,19 +8,14 @@ const router = Router();
 
 const coursesRouter = Router()
 
-coursesRouter.get(
+coursesRouter.post(
     '/review',
-    coursesController.getOnReview
+    coursesController.get
 );
 
 coursesRouter.get(
     '/review/:id',
     coursesController.getOnReviewById
-);
-
-coursesRouter.put(
-    '/review/update',
-    coursesController.updateCourseReview
 );
 
 coursesRouter.post(

@@ -1,11 +1,11 @@
 const { db } = require('../database/db');
 const format = require('pg-format');
 const { getCurrentUTCTime } = require('../helpers/time.helper');
-// const { query, where } = require('firebase/firestore')
-const fs = require('../database/firestore');
 const courseRunsController = require('../controllers/course-runs.controller')
 const progressController = require('../controllers/progress.controller')
 const courseReviewController = require('../controllers/course-review.contoller')
+
+const Course = require('../models/course.model')
 
 const table = 'courses';
 const reviewTable = 'courses-review';
@@ -24,13 +24,40 @@ const enrollStatuses = {
 };
 
 class CoursesController {
-	getAll = async (req, res) => {
-		const courses = await db.query(`SELECT * FROM ${table}`);
-		const data = parseModules(courses.rows);
-		return res.json({
-			data,
-		});
-	};
+
+    get = async (req, res) => {
+        const { type, authorId, coursesIds, studentId, fields } = req.body
+
+        try {
+            const response = {}
+            if (type.includes('review')) {
+                const review = await courseReviewController.select(req.body)
+                response.review = review
+            }
+            if (type.includes('published')) {
+                const published = await this.select(req.body)
+                response.published = published
+            }
+
+            console.log(response);
+            return res.json(response)
+        } catch (error) {
+            return res.status(500).json({
+                message: 'Error getting courses.',
+                error,
+            })
+        }
+    }
+
+    select = async (options) => {
+        const { authorId, coursesIds, fields } = options
+        const courses = await Course.get({
+            authorId,
+            ids: coursesIds,
+            fields
+        })
+        return courses;
+    }
 
 	getById = async (req, res) => {
 		const { id: courseRunId } = req.params;
@@ -95,103 +122,108 @@ class CoursesController {
 		});
 	};
 
-	async create(req, res) {
-		const { course, isMaster } = req.body;
-		const {
-			id,
-			uuid,
-			title,
-			description,
-			category,
-			acquiredCompetencies,
-			requiredCompetencies,
-			modules,
-			authorId,
-		} = course;
-		const createdAt = getCurrentUTCTime();
-		const masterId = isMaster ? null : course.masterId;
-		const modulesJson = JSON.stringify(modules);
+    publish = async (req, res) => {
+        const { course, masterId } = req.body
+        const record = await Course.create(course)
 
-        const result = await db.query(
-			`
-            INSERT into "${reviewTable}" 
-            ("uuid", title, description, category, "acquiredCompetencies", "requiredCompetencies", "modulesJson", "authorId", "createdAt", "masterId") 
-            values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) RETURNING *`,
-			[
-				uuid,
-				title,
-				description,
-				category,
-				acquiredCompetencies,
-				requiredCompetencies,
-				modulesJson,
-				authorId,
-				createdAt,
-				masterId,
-			]
-		);
-		const newCourse = parseModules(result.rows)[0];
+        // Remove from review all records with masterId
 
-        const reviewVersionDocId = await courseReviewController.createVersion({
-            ...course,
-            createdAt,
-            masterId
-        })
-        console.log('new version in firebase!', reviewVersionDocId);
+        return res.status(200).json({
+            message: 'Success',
+        });
+    }
 
-		if (!isMaster) {
-			await db.query(`UPDATE "${reviewTable}" SET status = $1 WHERE id = $2`, [
-				reviewStatuses.reviewed,
-				id,
-			]);
-		}
+    // Handles by MongoDB
+	// async create(req, res) {
+	// 	const { course, isMaster } = req.body;
+	// 	const {
+	// 		id,
+	// 		uuid,
+	// 		title,
+	// 		description,
+	// 		category,
+	// 		acquiredCompetencies,
+	// 		requiredCompetencies,
+	// 		modules,
+	// 		authorId,
+	// 	} = course;
+	// 	const createdAt = getCurrentUTCTime();
+	// 	const masterId = isMaster ? null : course.masterId;
+	// 	const modulesJson = JSON.stringify(modules);
 
-		res.status(200).json({
-			newCourse,
-		});
-	}
+    //     const result = await db.query(
+	// 		`
+    //         INSERT into "${reviewTable}" 
+    //         ("uuid", title, description, category, "acquiredCompetencies", "requiredCompetencies", "modulesJson", "authorId", "createdAt", "masterId") 
+    //         values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) RETURNING *`,
+	// 		[
+	// 			uuid,
+	// 			title,
+	// 			description,
+	// 			category,
+	// 			acquiredCompetencies,
+	// 			requiredCompetencies,
+	// 			modulesJson,
+	// 			authorId,
+	// 			createdAt,
+	// 			masterId,
+	// 		]
+	// 	);
+	// 	const newCourse = parseModules(result.rows)[0];
 
-	publish = async (req, res) => {
-		const { course, masterId } = req.body;
-		const {
-			title,
-			description,
-			category,
-			acquiredCompetencies,
-			requiredCompetencies,
-			modules,
-			authorId,
-			uuid,
-		} = course;
-		const createdAt = getCurrentUTCTime();
-		const modulesJson = JSON.stringify(modules);
+	// 	if (!isMaster) {
+	// 		await db.query(`UPDATE "${reviewTable}" SET status = $1 WHERE id = $2`, [
+	// 			reviewStatuses.reviewed,
+	// 			id,
+	// 		]);
+	// 	}
 
-		const insertQuery = `
-            INSERT INTO "${table}" 
-            (title, description, category, "acquiredCompetencies", "requiredCompetencies", "modulesJson", "authorId", "createdAt", "uuid") 
-            values ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING *`;
+	// 	res.status(200).json({
+	// 		newCourse,
+	// 	});
+	// }
 
-		const result = await db.query(insertQuery, [
-			title,
-			description,
-			category,
-            acquiredCompetencies,
-            requiredCompetencies,
-			modulesJson,
-			authorId,
-			createdAt,
-			uuid,
-		]);
+	// publish = async (req, res) => {
+	// 	const { course, masterId } = req.body;
+	// 	const {
+	// 		title,
+	// 		description,
+	// 		category,
+	// 		acquiredCompetencies,
+	// 		requiredCompetencies,
+	// 		modules,
+	// 		authorId,
+	// 		uuid,
+	// 	} = course;
+	// 	const createdAt = getCurrentUTCTime();
+	// 	const modulesJson = JSON.stringify(modules);
 
-		const clearReviewQuery = `DELETE FROM "${reviewTable}" WHERE id = $1 OR "masterId" = $1`;
-		await db.query(clearReviewQuery, [masterId]);
-        await courseRunsController.createCourseRun(result[0])
+	// 	const insertQuery = `
+    //         INSERT INTO "${table}" 
+    //         (title, description, category, "acquiredCompetencies", "requiredCompetencies", "modulesJson", "authorId", "createdAt", "uuid") 
+    //         values ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING *`;
 
-		return res.status(200).json({
-			message: 'Success',
-			course: parseModules(result.rows)[0],
-		});
-	};
+	// 	const result = await db.query(insertQuery, [
+	// 		title,
+	// 		description,
+	// 		category,
+    //         acquiredCompetencies,
+    //         requiredCompetencies,
+	// 		modulesJson,
+	// 		authorId,
+	// 		createdAt,
+	// 		uuid,
+	// 	]);
+
+	// 	const clearReviewQuery = `DELETE FROM "${reviewTable}" WHERE id = $1 OR "masterId" = $1`;
+	// 	await db.query(clearReviewQuery, [masterId]);
+    //     await courseRunsController.createCourseRun(result[0])
+
+	// 	return res.status(200).json({
+	// 		message: 'Success',
+	// 		course: parseModules(result.rows)[0],
+	// 	});
+	// };
 
 	updateCourseReview = async (req, res) => {
 		const { id, comments } = req.body;

@@ -7,65 +7,112 @@ const isTeacher = require('../middlewares/teacher-perm.middleware');
 
 const router = new Router();
 
+/* REVIEW START */ 
 const reviewRouter = new Router();
+
 reviewRouter.post(
-    '/create', 
-    authenticate(),
+    '/create',
     isTeacher,
     courseReviewController.createVersion
 )
 
-router.use('/review', reviewRouter)
+router.use('/review', authenticate(), reviewRouter)
+/* REVIEW END */ 
+
+
+/* TEACHER START */ 
+const teacherRouter = new Router();
+
+teacherRouter.post(
+    '/select', 
+    async (req, res, next) => {
+        console.log('teacher', req.body);
+        return res.json('teacher...')
+    }
+)
+
+router.use('/teacher', authenticate(), isTeacher, teacherRouter)
+/* TEACHER END */ 
+
+router.post(
+	'/select',
+	authenticate(),
+    coursesController.get
+);
 
 router.get(
     '/members',
     authenticate(),
     isTeacher,
-    coursesController.getCourseMembers
+    async (req, res) => {
+        return res.send('Not implemented')
+    },
+    // coursesController.getCourseMembers
 )
 
 router.get(
 	'/',
 	authenticate(),
-	coursesController.getAll
+    async (req, res) => {
+        return res.send('Not implemented')
+    },
+	// coursesController.getAll
 );
 
 router.get(
 	'/:id',
 	authenticate(),
-	coursesController.getById
+    async (req, res) => {
+        return res.send('Not implemented')
+    },
+	// coursesController.getById
 );
 
 router.get(
 	'/review/history',
 	authenticate(),
-	coursesController.getCourseReviewHistory
+    async (req, res) => {
+        return res.send('Not implemented')
+    },
+	// coursesController.getCourseReviewHistory
 );
 
 router.post(
 	'/teacher',
 	authenticate(),
     isTeacher,
-	coursesController.getByAuthorId
+    async (req, res) => {
+        return res.send('Not implemented')
+    },
+	// coursesController.getByAuthorId
 );
 
 router.post(
 	'/student',
 	authenticate(),
-	coursesController.getStudentCourses
+    async (req, res) => {
+        return res.send('Not implemented')
+    },
+	// coursesController.getStudentCourses
 );
 
 router.post(
 	'/create',
 	authenticate(),
     isTeacher,
-	coursesController.create
+    async (req, res) => {
+        return res.send('Not implemented')
+    },
+	// coursesController.create
 );
 
 router.post(
     '/enroll',
     authenticate(),
-    coursesController.enroll
+    async (req, res) => {
+        return res.send('Not implemented')
+    },
+    // coursesController.enroll
 )
 
 module.exports = router;

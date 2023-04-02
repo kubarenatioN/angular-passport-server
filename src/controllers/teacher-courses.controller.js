@@ -1,20 +1,22 @@
-const CourseReview = require('../models/course-review.model')
+const model = require('../models/course-review.model')
 const { getCurrentUTCTime } =  require('../helpers/time.helper')
 
-class CourseReviewController {
+class TeacherCoursesController {
 
     createVersion = async (req, res) => {
         const { course, isMaster } = req.body
 
         const createdAt = getCurrentUTCTime();
 		const masterId = isMaster ? null : course.masterId;
+
+        const newReview = new model({
+            ...course,
+            createdAt,
+            masterId,
+        })
         
         try {
-            const data = CourseReview.create({
-                ...course,
-                createdAt,
-                masterId,    
-            })
+            const data = newReview.save()
 
             if (!isMaster) {
                 // Update current record status
@@ -33,23 +35,7 @@ class CourseReviewController {
         
     }
 
-    select = async (options) => {
-        const { authorId, coursesIds, fields } = options
-        const data = await CourseReview.get({
-            ids: coursesIds ?? [],
-            fields,
-            authorId
-        })
-
-        return data
-    }
-
-    getById = async (req, res) => {
-
-    }
-
 }
 
 const controller = new CourseReviewController()
-
 module.exports = controller

@@ -6,9 +6,6 @@ const schema = new mongoose.Schema({
         required: true,
         type: String,
     },
-    masterId: {
-        type: Types.ObjectId
-    },
     title: {
         required: true,
         type: String,
@@ -37,17 +34,12 @@ const schema = new mongoose.Schema({
         required: true,
         type: Object,
     },
-    comments: {
-        required: true,
-        type: Object,
-    },
-    status: {
-        required: true,
-        type: String,
-    },   
+    isActive: {
+        type: Boolean
+    }   
 })
 
-const model = mongoose.model('CourseReview', schema, 'courseReviews')
+const model = mongoose.model('Course', schema, 'courses')
 
 module.exports = {
     Model: model,
@@ -65,11 +57,10 @@ module.exports = {
             const data = await model
                 .find(query)
                 .select(fields)
-
-                console.log(data);
-                return data
+            console.log(data);
+            return data
         } catch (error) {
-            throw new Error('Error getting review courses')
+            throw new Error('Error getting published courses')
         }
     },
     create: async (data, options) => {
