@@ -1,6 +1,7 @@
 const Router = require('express').Router;
 const passport = require('passport');
 const coursesController = require('../controllers/course.controller');
+const courseReviewController = require('../controllers/course-review.contoller');
 
 const router = Router();
 
@@ -13,10 +14,16 @@ coursesRouter.post(
     coursesController.get
 );
 
+// TODO: Check for bugs
 coursesRouter.get(
     '/review/:id',
     coursesController.getOnReviewById
 );
+
+coursesRouter.put(
+    '/review/update',
+    courseReviewController.updateVersion
+)
 
 coursesRouter.post(
     '/publish',

@@ -39,7 +39,6 @@ class CoursesController {
                 response.published = published
             }
 
-            console.log(response);
             return res.json(response)
         } catch (error) {
             return res.status(500).json({

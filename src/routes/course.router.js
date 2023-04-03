@@ -16,6 +16,11 @@ reviewRouter.post(
     courseReviewController.createVersion
 )
 
+reviewRouter.post(
+    '/history',
+    courseReviewController.getHistory
+)
+
 router.use('/review', authenticate(), reviewRouter)
 /* REVIEW END */ 
 

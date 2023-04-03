@@ -7,7 +7,7 @@ const schema = new mongoose.Schema({
         type: String,
     },
     masterId: {
-        type: Types.ObjectId
+        type: String
     },
     title: {
         required: true,
@@ -44,14 +44,16 @@ const schema = new mongoose.Schema({
     status: {
         required: true,
         type: String,
-    },   
+        default: 'ReadyForReview'
+    },
 })
 
 const model = mongoose.model('CourseReview', schema, 'courseReviews')
 
 module.exports = {
     Model: model,
-    get: async (options) => {
+
+    select: async (options) => {
         try {
             const { ids, fields, authorId } = options
             const query = {}
@@ -66,12 +68,17 @@ module.exports = {
                 .find(query)
                 .select(fields)
 
-                console.log(data);
-                return data
+            return data
         } catch (error) {
             throw new Error('Error getting review courses')
         }
     },
+
+    get: async (id) => {
+        const record = await model.findById(id)
+        return record
+    },
+
     create: async (data, options) => {
 
         const newRecord = new model({
@@ -79,5 +86,18 @@ module.exports = {
         })
 
         return newRecord.save();
+    },
+
+    history: async ({ masterId, fields }) => {
+        const historyChain = await model
+            .find({
+                $or: [
+                    { masterId },
+                    { uuid: masterId }
+                ]
+            })
+            .select(fields)
+
+        return historyChain
     }
 }
