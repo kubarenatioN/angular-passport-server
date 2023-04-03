@@ -27,11 +27,11 @@ const schema = new mongoose.Schema({
         type: String,
     },
     category: {
-        required: true,
+        // required: true,
         type: String,
     },
     competencies: {
-        required: true,
+        // required: true,
         type: Object,
     },
     isActive: {
@@ -57,7 +57,7 @@ module.exports = {
             const data = await model
                 .find(query)
                 .select(fields)
-            console.log(data);
+
             return data
         } catch (error) {
             throw new Error('Error getting published courses')

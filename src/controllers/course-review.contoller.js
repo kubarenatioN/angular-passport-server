@@ -1,5 +1,6 @@
 const CourseReview = require('../models/course-review.model')
 const { getCurrentUTCTime } =  require('../helpers/time.helper')
+const { reviewStatuses } = require('../constants/common.constants')
 
 class CourseReviewController {
 
@@ -8,23 +9,32 @@ class CourseReviewController {
 
         const createdAt = getCurrentUTCTime();
 		const masterId = isMaster ? null : course.masterId;
+        const parentId = course._id
         
         try {
-            const data = CourseReview.create({
+            delete course._id
+            const data = await CourseReview.create({
                 ...course,
                 createdAt,
-                masterId,    
+                masterId,
+                status: reviewStatuses.readyForReview  
             })
 
             if (!isMaster) {
-                // Update current record status
+                const parentVersion = await CourseReview.get(parentId)
+                if (parentVersion) {
+                    parentVersion.status = reviewStatuses.reviewed
+
+                    await parentVersion.save()
+                }
             }
             
             return res.status(200).json(data)
         } catch (error) {
             return res.status(500).json({
                 operation: 'CREATE_REVIEW_VERSION',
-                message: 'Error while saving data.'
+                message: 'Error while saving data.',
+                error
             })
         }
     }
@@ -41,6 +51,7 @@ class CourseReviewController {
         }
         reviewVersion.modules = modules
         reviewVersion.comments = overallComments
+        reviewVersion.status = reviewStatuses.readyForUpdate
         const updated = await reviewVersion.save()
         return res.status(200).json({
             message: 'Update successfully',
@@ -72,8 +83,8 @@ class CourseReviewController {
         const { authorId, coursesIds, fields } = options
         const data = await CourseReview.select({
             ids: coursesIds ?? [],
-            fields,
-            authorId
+            authorId,
+            fields
         })
 
         return data

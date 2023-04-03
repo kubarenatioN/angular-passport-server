@@ -4,24 +4,13 @@ const { getCurrentUTCTime } = require('../helpers/time.helper');
 const courseRunsController = require('../controllers/course-runs.controller')
 const progressController = require('../controllers/progress.controller')
 const courseReviewController = require('../controllers/course-review.contoller')
+const { reviewStatuses, enrollStatuses } = require('../constants/common.constants')
 
 const Course = require('../models/course.model')
 
 const table = 'courses';
 const reviewTable = 'courses-review';
 const usersCourses = 'users-courses';
-
-const reviewStatuses = {
-	reviewed: 'Reviewed',
-	readyForReview: 'ReadyForReview',
-	readyForUpdate: 'ReadyForUpdate',
-};
-
-const enrollStatuses = {
-	pending: 'Pending',
-	approved: 'Approved',
-	rejected: 'Rejected',
-};
 
 class CoursesController {
 

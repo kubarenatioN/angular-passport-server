@@ -30,11 +30,11 @@ const schema = new mongoose.Schema({
         type: String,
     },
     category: {
-        required: true,
+        // required: true,
         type: String,
     },
     competencies: {
-        required: true,
+        // required: true,
         type: Object,
     },
     comments: {
@@ -79,6 +79,11 @@ module.exports = {
         return record
     },
 
+    getByUUID: async (uuid) => {
+        const record = await model.findOne({ uuid })
+        return record
+    },
+
     create: async (data, options) => {
 
         const newRecord = new model({
@@ -96,6 +101,7 @@ module.exports = {
                     { uuid: masterId }
                 ]
             })
+            .sort({ createdAt: -1 })
             .select(fields)
 
         return historyChain
