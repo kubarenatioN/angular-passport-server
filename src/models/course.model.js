@@ -5,6 +5,7 @@ const schema = new mongoose.Schema({
     uuid: {
         required: true,
         type: String,
+        unique: true,
     },
     title: {
         required: true,

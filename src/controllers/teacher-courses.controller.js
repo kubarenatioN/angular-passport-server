@@ -30,12 +30,12 @@ class TeacherCoursesController {
             })
         }
     }
-
-    get = async (req, res) => {
-        
+    
+    handleMembership = async (req, res) => {
+        return res.json('teacher')
     }
 
 }
 
-const controller = new CourseReviewController()
+const controller = new TeacherCoursesController()
 module.exports = controller
