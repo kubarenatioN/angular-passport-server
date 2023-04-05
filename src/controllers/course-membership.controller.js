@@ -5,11 +5,11 @@ const Course = require('../models/course.model')
 class CourseMembershipController {
 
     setEnrollStatus = async (req, res) => {
-        const { usersIds, courseId, courseUUId } = req.body
+        const { usersIds, courseId } = req.body
         const { action } = req.query
 
         if (action === 'enroll') {
-            const enrolled = await this._enroll(usersIds, courseUUId, courseId)
+            const enrolled = await this._enroll(usersIds, courseId)
 
             return res.status(200).json({
                 message: 'Enrolled',
@@ -81,7 +81,7 @@ class CourseMembershipController {
     _enroll = async (usersIds, courseId) => {
         const existed = await CourseMembership.Model.find({
             userId: usersIds,
-            courseId: courseUUId,
+            courseId,
         })
         if (existed.length > 0) {
             return res.status(404).json({

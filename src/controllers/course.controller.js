@@ -160,7 +160,15 @@ class CoursesController {
                 break;
             }
             case 'lookup': {
-                break;
+                const records = await CourseMembership.Model.find({
+                    userId: usersIds,
+                    courseId
+                })
+
+                return res.status(200).json({
+                    data: records,
+                    action
+                })
             }
         
             default: {
@@ -168,12 +176,7 @@ class CoursesController {
             }
         }
         
-        const records = await CourseMembership.Model.find({})
-
-        return res.status(200).json({
-            data: records,
-            action
-        })
+        
     } 
 
 	enroll = async (req, res) => {
