@@ -6,14 +6,12 @@ const teacherCourseController = require('../controllers/teacher-courses.controll
 const courseMembership = require('../controllers/course-membership.controller');
 const authenticate = require('../middlewares/authenticate.middleware');
 const isTeacher = require('../middlewares/teacher-perm.middleware');
-const { verifyToken } = require('../helpers/token-helper');
 require('dotenv').config()
-
-const { JWT_PRIVATE_KEY } = process.env
 
 const router = new Router();
 
 /* REVIEW START */ 
+
 const reviewRouter = new Router();
 
 reviewRouter.post(
@@ -28,6 +26,7 @@ reviewRouter.post(
 )
 
 router.use('/review', authenticate(), reviewRouter)
+
 /* REVIEW END */ 
 
 
@@ -61,6 +60,11 @@ router.post(
 	authenticate(),
 	coursesController.list
 );
+
+router.post(
+    '/student',
+    courseMembership.getUserCourses
+)
 
 router.post(
     '/membership',

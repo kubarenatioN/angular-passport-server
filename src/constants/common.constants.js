@@ -5,9 +5,9 @@ const reviewStatuses = {
 };
 
 const enrollStatuses = {
-	pending: 'Pending',
-	approved: 'Approved',
-	rejected: 'Rejected',
+	pending: 'pending',
+	approved: 'approved',
+	rejected: 'rejected',
 };
 
 module.exports = { reviewStatuses, enrollStatuses }

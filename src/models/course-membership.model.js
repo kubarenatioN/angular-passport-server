@@ -14,7 +14,7 @@ const schema = new mongoose.Schema({
         type: String,
         required: true,
         default: 'pending'
-    }
+    },
 })
 
 const model = mongoose.model('CourseMembership', schema, 'coursesMembership')
