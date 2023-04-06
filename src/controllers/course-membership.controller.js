@@ -4,6 +4,31 @@ const Course = require('../models/course.model')
 
 class CourseMembershipController {
 
+    lookup = async (req, res) => {
+        const { courseId, usersIds } = req.body
+        
+        const records = await CourseMembership.Model.find({
+            userId: usersIds,
+            courseId
+        })
+
+        return res.status(200).json({
+            data: records,
+            action: 'lookup'
+        })
+    }
+
+    getMembers = async (req, res) => {
+        const { type, courseId, status } = req.body
+
+        
+
+        return res.json({
+            message: 'getMemebrs',
+            type
+        })
+    }
+
     setEnrollStatus = async (req, res) => {
         const { usersIds, courseId } = req.body
         const { action } = req.query
@@ -29,53 +54,6 @@ class CourseMembershipController {
         return res.status(200).json({
             message: 'No enroll status changes were made.'
         })
-    }
-
-    setMembershipStatus = async (payload) => {
-        const { status, usersIds, courseId } = payload
-
-        
-    }
-
-    lookupStatus = async (req, res) => {
-        const { usersIds, courseId } = payload
-
-    }
-
-    getUserCourses = async (req, res) => {
-        const { userId, fields } = req.body
-
-        try {
-            const userCourses = await CourseMembership.Model.find({
-                userId: String(userId)
-            })
-
-            const coursesIds = userCourses.map(record => record.courseId)
-
-            const courses = await Course.Model.find({
-                uuid: {
-                    $in: coursesIds
-                }
-            }).select(fields)
-
-            const data = userCourses.map(userCourse => {
-                const course = courses.find(c => c.uuid === userCourse.courseId)
-                return {
-                    ...userCourse._doc,
-                    course
-                }
-            })
-
-            return res.status(200).json({
-                message: 'Success',
-                data
-            })
-
-        } catch (error) {
-            return res.status(500).json({
-                message: 'Error getting user courses.'
-            })
-        }
     }
 
     _enroll = async (usersIds, courseId) => {

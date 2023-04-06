@@ -31,8 +31,9 @@ class TeacherCoursesController {
         }
     }
     
-    handleMembership = async (req, res) => {
-        return res.json('teacher')
+    updateMembership = async (req, res) => {
+        const { status, usersIds, courseId } = req.body
+        return res.json({message: 'updateMembership', status})
     }
 
 }

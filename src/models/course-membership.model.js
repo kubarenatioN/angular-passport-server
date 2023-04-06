@@ -21,4 +21,8 @@ const model = mongoose.model('CourseMembership', schema, 'coursesMembership')
 
 module.exports = {
     Model: model,
+    getUsers: async (ids) => {
+        const res = []
+        return res
+    }
 }

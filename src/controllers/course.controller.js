@@ -151,110 +151,41 @@ class CoursesController {
         }
     }
 
-    handleMembership = async (req, res) => {
-        const { usersIds, courseId } = req.body
-        const { action } = req.query
+    getUserCourses = async (req, res) => {
+        const { userId, fields } = req.body
 
-        switch (action) {
-            case 'update': {
-                break;
-            }
-            case 'lookup': {
-                const records = await CourseMembership.Model.find({
-                    userId: usersIds,
-                    courseId
-                })
+        try {
+            const userCourses = await CourseMembership.Model.find({
+                userId: String(userId)
+            })
 
-                return res.status(200).json({
-                    data: records,
-                    action
-                })
-            }
-        
-            default: {
-                return await courseMembershipController.setEnrollStatus(req, res)
-            }
+            const coursesIds = userCourses.map(record => record.courseId)
+
+            const courses = await Course.Model.find({
+                uuid: {
+                    $in: coursesIds
+                }
+            }).select(fields)
+
+            const data = userCourses.map(userCourse => {
+                const course = courses.find(c => c.uuid === userCourse.courseId)
+                return {
+                    ...userCourse._doc,
+                    course
+                }
+            })
+
+            return res.status(200).json({
+                message: 'Success',
+                data
+            })
+
+        } catch (error) {
+            return res.status(500).json({
+                message: 'Error getting user courses.'
+            })
         }
-        
-        
-    } 
-
-	enroll = async (req, res) => {
-		const { courseId, userIds, action } = req.body;
-
-		let queryString = '';
-		let payload = [];
-		let data;
-		const createdAt = getCurrentUTCTime();
-		if (action === 'enroll') {
-			let { rows } = await db.query(
-				`SELECT * FROM "${usersCourses}" WHERE "userId" = ANY($1::int[]) AND "courseId" = $2`,
-				[userIds, courseId]
-			);
-
-			if (rows.length > 0) {
-				return res.status(400).json({
-					message: 'Try to insert already existed data',
-					data: rows,
-				});
-			}
-			data = userIds.map((userId) => [
-				userId,
-				courseId,
-				enrollStatuses.pending,
-				createdAt,
-			]);
-			queryString = format(
-				`INSERT INTO "${usersCourses}" ("userId", "courseId", "status", created_at) VALUES %L RETURNING "userId"`,
-				data
-			);
-		} else if (action === 'lookup') {
-			queryString = `SELECT * FROM "${usersCourses}" WHERE "userId" = ANY($1::int[]) AND "courseId" = $2`;
-			payload = [userIds, courseId];
-		} else if (action === 'approve') {
-			queryString = `UPDATE "${usersCourses}" SET status = $1, created_at = $4 WHERE "userId" = ANY($2::int[]) AND "courseId" = $3 RETURNING "userId"`;
-			payload = [enrollStatuses.approved, userIds, courseId, createdAt];
-		} else if (action === 'reject') {
-			queryString = `UPDATE "${usersCourses}" SET status = $1, created_at = $4 WHERE "userId" = ANY($2::int[]) AND "courseId" = $3 RETURNING "userId"`;
-			payload = [enrollStatuses.rejected, userIds, courseId, createdAt];
-		} else if (action === 'cancel') {
-			queryString = `DELETE FROM "${usersCourses}" WHERE "userId" = ANY($1::int[]) AND "courseId" = $2 RETURNING "userId"`;
-			payload = [userIds, courseId];
-		}
-
-		if (action) {
-			const { rows } = await db.query(queryString, payload);
-
-			return res.status(200).json({
-				data: rows,
-				message: 'Success',
-				action,
-			});
-		}
-	};
-
-	getStudentCourses = async (req, res) => {
-		const { userId } = req.body;
-		if (!userId) {
-			return res.status(400).json({
-				message: 'No user ID was provided.',
-			});
-		}
-
-		const queryString = `
-            SELECT "${table}".*, "${usersCourses}"."status"
-            FROM "${table}" 
-            JOIN "${usersCourses}" ON "${usersCourses}"."courseId" = "${table}"."id"
-            WHERE "${usersCourses}"."userId" = $1
-        `;
-		const payload = [userId];
-
-		const { rows } = await db.query(queryString, payload);
-		return res.status(200).json({
-			data: parseModules(rows),
-			message: 'Success',
-		});
-	};
+    }
 
 	getCourseMembers = async (req, res) => {
 		const { type, status } = req.query;
@@ -309,14 +240,6 @@ class CoursesController {
 			return res.json({});
 		}
 	};
-}
-
-function parseModules(courses) {
-	return courses.map((course) => {
-		course.modules = JSON.parse(course.modulesJson);
-		delete course.modulesJson;
-		return course;
-	});
 }
 
 const controller = new CoursesController();
