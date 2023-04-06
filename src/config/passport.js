@@ -1,4 +1,5 @@
 const passport = require('passport');
+const { userSocialType } = require('../constants/common.constants');
 const JwtStrategy = require('passport-jwt').Strategy;
 const GoogleStrategy = require('passport-google-oauth20').Strategy;
 const ExtractJwt = require('passport-jwt').ExtractJwt;
@@ -21,9 +22,8 @@ passport.use(
 	new JwtStrategy(jwtOptions, async (jwtPayload, done) => {
 		// console.log('111 jwt user data', jwtPayload);
 		if (jwtPayload) {
-			const user = await findUserByEmail(jwtPayload.email, {
-                isSocial: false
-            });
+            const { email } = jwtPayload
+			const user = await findUserByEmail({ email });
 			if (user) {
 				return done(null, user);
 			} else {
@@ -44,34 +44,33 @@ passport.use(
         const email = profile.emails[0].value
         const photo = profile.photos[0].value
         // console.log('profile', id, photo, email);
-        const user = await findUserByEmail(email, {
-            isSocial: true
+        const user = await findUserByEmail({
+            email,
+            socialId: id,
         });
         if (user) {
+            console.log('123', user);
             return done(null, user)
         }
         else {
             const user = await saveUser({
+                socialType: userSocialType.google,
                 socialId: id,
                 email,
                 photo,
                 username: email,
-                role: 'student',
-                social: 'google'
             })
             return done(null, {
-                ...user,
-                id: user.id
+                ...user
             })
         }
 	})
 );
 
-
-async function findUserByEmail(email) {
-    return userController.findByEmail(email)
+async function findUserByEmail(payload) {
+    return userController.findByEmail(payload)
 } 
 
 async function saveUser(user) {
-    return userController.createFromObject(user)
+    return userController.createFromSocial(user)
 }

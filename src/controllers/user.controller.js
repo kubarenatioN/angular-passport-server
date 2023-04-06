@@ -1,43 +1,63 @@
+require('dotenv').config();
+const crypto = require('crypto');
 const { db } = require('../database/db');
+const { generateUUID } = require('../helpers/common.helper');
+const User = require('../models/user.model');
+const { signToken, verifyToken } = require('../helpers/token-helper');
 
 const table = 'users-test';
+const { JWT_PRIVATE_KEY } = process.env;
 
 class UserController {
-	async create(req, res) {
-		const { email, password, salt } = req.body.user;
-		const newUser = await db.query(
-			`INSERT into "${table}" (email, username, password, salt) values ($1, $1, $2, $3) RETURNING *`,
-			[email, password, salt]
-		);
-
-		res.json(newUser.rows[0]);
-	}
     
-	async createFromObject(user) {
-        const isSocial = user.social != null
-        if (!isSocial) {
-            const { email, password, salt } = user;
-            return db.query(
-                `INSERT into "${table}" (email, username, password, salt) values ($1, $1, $2, $3) RETURNING *`,
-                [email, password, salt]).then(res => res.rows[0]);
-        }
-        else {
-            const { email, photo, username, socialId, social } = user
-            console.log('save social profile', user);
-            return db.query(
-                `INSERT into "${table}" (email, username, photo, social_type, social_id) values ($1, $1, $2, $3, $4) RETURNING id, email, photo, username, role`,
-                [email, photo, social, socialId]).then(res => res.rows[0]);
-        }
+    create = async (req, res) => {
+		const { email, password } = req.body;
+        const salt = createSalt();
+        const hash = hashPassword(password, salt);
+        const uuid = generateUUID()
+
+        const user = new User.Model({
+            uuid,
+            email,
+            username: email,
+            salt,
+            password: hash,
+        })
+        const created = await user.save()
+
+        res.status(200).json({
+            message: 'User created',
+            user: {
+                _id: created._id,
+                uuid,
+                email,
+                username: email,
+                role: created.role
+            }
+        });
 	}
 
-	async createWithPromise(payload) {
-		const { email, password, salt } = payload;
-		return db
-			.query(
-				`INSERT into "${table}" (email, username, password, salt) values ($1, $1, $2, $3) RETURNING *`,
-				[email, password, salt]
-			)
-			.then((newUser) => newUser.rows[0]);
+	createFromSocial = async (user) => {
+        const { email, photo, username, socialId, socialType } = user
+        const uuid = generateUUID()
+        
+        const created = await new User.Model({
+            uuid,
+            email,
+            username,
+            socialId,
+            socialType,
+            photo,
+            role: 'student'
+        }).save()
+
+        return {
+            uuid: created.uuid,
+            email,
+            username,
+            photo,
+            role: created.role,
+        }
 	}
 
 	async getById(req, res) {
@@ -48,11 +68,63 @@ class UserController {
         });
 	}
 
-	async findByEmail(email) {
-        return db
-            .query(`SELECT * FROM "${table}" where email = $1`, [email])
-            .then((res) => res.rows[0]);
+	findByEmail = async ({email, socialId}) => {
+        return User.Model.findOne({
+            email,
+            socialId,
+        })
 	}
+
+    loginJwt = async (req, res) => {
+        try {
+            const { password, email: reqEmail } = req.body
+            const user = await this.findByEmail({ email: reqEmail })
+            
+            if (!user) {
+                throw new Error('User not found.')
+            }
+
+            if (!user.salt) {
+                throw new Error('No user salt found.')
+            }
+
+            if (!comparePasswords(password, user.salt, user.password)) {
+                throw new Error('Incorrect password.')
+            }
+
+            const {
+                uuid,
+                email,
+                username,
+                photo,
+                role,
+            } = user;
+            console.log(user);
+
+            const payload = {
+                uuid,
+                email,
+                username,
+                photo,
+                role,
+            }
+
+            const token = signToken(payload, JWT_PRIVATE_KEY);
+
+            return res.status(200).json({
+                token,
+                message: 'Logged in successfully.',
+                user: payload,
+            });
+        } catch (error) {
+            return res.status(500).json({
+                message: 'Login error.',
+                token: null,
+                user: null,
+                error: error.message
+            })
+        }
+    }
 
 	async getAll(req, res) {
 		const users = await db.query(`SELECT * FROM ${table}`);
@@ -73,6 +145,18 @@ class UserController {
 		const users = await db.query(`DELETE FROM ${table} where id = $1`, [id]);
 		res.json(users.rows);
 	}
+}
+
+function createSalt() {
+	return crypto.randomBytes(16).toString('hex');
+}
+
+function hashPassword(password, salt) {
+	return crypto.pbkdf2Sync(password, salt, 1000, 32, `sha512`).toString(`hex`);
+}
+
+function comparePasswords(password, salt, hash) {
+	return hashPassword(password, salt) === hash;
 }
 
 const controller = new UserController();

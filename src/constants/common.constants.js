@@ -10,4 +10,15 @@ const enrollStatuses = {
 	rejected: 'rejected',
 };
 
-module.exports = { reviewStatuses, enrollStatuses }
+const userRoles = {
+	student: 'student',
+	teacher: 'teacher',
+	admin: 'admin',
+};
+
+const userSocialType = {
+	google: 'google',
+	twitter: 'twitter',
+};
+
+module.exports = { reviewStatuses, enrollStatuses, userRoles, userSocialType }

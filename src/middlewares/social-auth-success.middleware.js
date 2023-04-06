@@ -3,12 +3,12 @@ const { getRedirectWindowHtml } = require('../helpers/auth-redirect-window');
 const { CLIENT_URL } = require('../config/urls');
 require('dotenv').config();
 
-const JWT_PRIVATE_KEY = process.env.JWT_PRIVATE_KEY
+const { JWT_PRIVATE_KEY } = process.env
+
 const socialSuccessAuth = (req, res) => {
-    // console.log('socialSuccessAuth user', req.user);
-    const { id, email, username, photo, role } = req.user
+    const { uuid, email, username, photo, role } = req.user
     const token = signToken({ 
-        id,
+        uuid,
         email,
         username,
         photo,
