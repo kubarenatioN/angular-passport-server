@@ -1,5 +1,6 @@
 const model = require('../models/course-review.model')
 const { getCurrentUTCTime } =  require('../helpers/time.helper')
+const courseMembershipController = require('./course-membership.controller');
 
 class TeacherCoursesController {
 
@@ -29,11 +30,6 @@ class TeacherCoursesController {
                 message: 'Error while saving data.'
             })
         }
-    }
-    
-    updateMembership = async (req, res) => {
-        const { status, usersIds, courseId } = req.body
-        return res.json({message: 'updateMembership', status})
     }
 
 }

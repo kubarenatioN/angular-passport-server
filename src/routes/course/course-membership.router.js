@@ -10,7 +10,7 @@ router.post(
 
 router.post(
     '/enroll',
-    courseMembershipController.setEnrollStatus
+    courseMembershipController.handleEnroll
 )
 
 router.post(

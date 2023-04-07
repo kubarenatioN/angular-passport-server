@@ -42,7 +42,7 @@ class CourseMembershipController {
         })
     }
 
-    setEnrollStatus = async (req, res) => {
+    handleEnroll = async (req, res) => {
         const { usersIds, courseId } = req.body
         const { action } = req.query
 
@@ -66,6 +66,23 @@ class CourseMembershipController {
 
         return res.status(200).json({
             message: 'No enroll status changes were made.'
+        })
+    }
+
+    updateEnroll = async (req, res) => {
+        const { courseId, usersIds, status } = req.body
+
+        const records = await CourseMembership.Model.updateMany({
+            courseId,
+            userId: usersIds
+        }, {
+            status
+        })
+
+        return res.status(200).json({
+            message: 'Updated enroll',
+            status,
+            records
         })
     }
 
