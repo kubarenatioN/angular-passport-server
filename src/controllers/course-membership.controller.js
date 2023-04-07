@@ -1,6 +1,7 @@
 const { enrollStatuses } = require('../constants/common.constants')
 const CourseMembership = require('../models/course-membership.model')
 const Course = require('../models/course.model')
+const User = require('../models/user.model')
 
 class CourseMembershipController {
 
@@ -19,13 +20,25 @@ class CourseMembershipController {
     }
 
     getMembers = async (req, res) => {
-        const { type, courseId, status } = req.body
+        const { type, courseId, status, size, page, query } = req.body
 
-        
+        if (type === 'list' && size != null && page != null) {
+            const members = await CourseMembership.Model.find({
+                courseId,
+                status,
+            }).skip(page * size).limit(size)
 
-        return res.json({
-            message: 'getMemebrs',
-            type
+            const data = await CourseMembership.getWithUsers(members)
+
+            return res.status(200).json({
+                message: 'Success',
+                data,
+            })
+        }
+
+        return res.status(404).json({
+            message: 'Cannot get members with such request.',
+            data: []
         })
     }
 

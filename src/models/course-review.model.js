@@ -20,7 +20,7 @@ const schema = new mongoose.Schema({
     },
     authorId: {
         required: true,
-        type: Number,
+        type: String,
     },
     modules: {
         required: true,

@@ -20,7 +20,6 @@ const googleOptions = {
 
 passport.use(
 	new JwtStrategy(jwtOptions, async (jwtPayload, done) => {
-		// console.log('111 jwt user data', jwtPayload);
 		if (jwtPayload) {
             const { email } = jwtPayload
 			const user = await findUserByEmail({ email });
@@ -49,7 +48,6 @@ passport.use(
             socialId: id,
         });
         if (user) {
-            console.log('123', user);
             return done(null, user)
         }
         else {

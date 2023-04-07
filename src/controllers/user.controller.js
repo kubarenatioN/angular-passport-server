@@ -99,7 +99,6 @@ class UserController {
                 photo,
                 role,
             } = user;
-            console.log(user);
 
             const payload = {
                 uuid,
