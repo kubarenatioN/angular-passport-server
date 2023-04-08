@@ -8,7 +8,7 @@ const uploader = multer({
             const { tempFolder } = req.body
             const folder = `${rootUploadsPath}/${tempFolder}`
             if (!fs.existsSync(folder)) {
-                fs.mkdirSync(folder);
+                fs.mkdirSync(folder, { recursive: true });
             }
             cb(null, folder)
         },

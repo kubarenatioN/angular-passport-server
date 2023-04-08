@@ -5,7 +5,7 @@ const path = require('path');
 const mime = require('mime-types');
 const { uploader, rootTempUpload } = require('../config/multer.config')
 const { getCurrentUTCTime } = require('../helpers/time.helper');
-const { unlink } = require('fs/promises');
+const { unlink, readdir } = require('fs/promises');
 
 const router = new Router();
 
@@ -33,7 +33,7 @@ router.post(
 router.post(
 	'/remote',
 	authenticate(),
-	uploadCloudinary
+	uploadToRemote
 );
 
 router.post(
@@ -50,36 +50,41 @@ router.post(
 
 router.get('/files', getFiles)
 
-async function uploadCloudinary(req, res, next) {
-    const { tempFolder } = req.body;
-    console.log(tempFolder);
+async function uploadToRemote(req, res, next) {
+    const { rootFolder } = req.body;
+   
     try {
-        const { file } = req
-        if (!file) {
-            return res.status(404).send({
-                message: 'No file provided.',
-            });
-        } else {
-            console.log(file);
-            const { folder } = req.body;
-            const uploadOptions = getUploadOptions(file);
+        const readPath = path.join(globalThis.appRoot, rootTempUpload, rootFolder);
+        const typesFolders = await readdir(readPath)
+        
+        for (const typeFolder of typesFolders) {
+            // folder of type, e.g. 'tasks', 'topics'
+            const filesFolders = await readdir(path.join(readPath, typeFolder))
+            for (const filesFolder of filesFolders) {
+                // closest folder to files, name is a uuid of form control
+                const fromFolder = path.join(readPath, typeFolder, filesFolder)
+                const uploadFolder = path.join(rootFolder, typeFolder, filesFolder)
+                const files = await readdir(fromFolder)
 
-            if (!folder) {
-                throw new Error('No folder path provided.');
+                for (const filename of files) {
+
+                    const upload = await uploadSingleFile({ pathFrom: path.join(fromFolder, filename), uploadFolder, filename })
+                    
+                }
             }
-
-            const upload = await cloudinary.uploader.upload(file.path, {
-                ...uploadOptions,
-                folder,
-            });
-
-            return res.send({
-                message: 'File uploaded',
-                data: upload,
-            });
         }
+
+        return res.send({
+            message: 'File uploaded',
+            data: 'test 123',
+        });
+
     } catch (err) {
-        return res.status(500).send(err);
+        return res.status(500).json({
+            message: 'Error uploading files to cloud.',
+            err,
+            origin: rootFolder
+        });
     }
 }
 
@@ -112,19 +117,29 @@ async function deleteTempFile(req, res, next) {
     }
 }
 
-function getFileInfo(file) {
-    const metadata = getFileMetadata(file)
-    const isImage = isFileOfTypeImage(metadata.ext, metadata.mime)
-    if (isImage) {
-        return {
-            metadata,
-            type: 'image'
-        }
+async function uploadSingleFile({ pathFrom, uploadFolder, filename }) {
+    if (!uploadFolder) {
+        throw new Error('No folder path provided.');
     }
-    return {
-        metadata,
-        type: 'other'
-    }
+    
+    const options = getUploadOptions(filename);
+    ``
+    const uploaded = await uploadCloudinary(pathFrom, uploadFolder, options)
+
+    return uploaded
+}
+
+async function uploadCloudinary(pathFrom, uploadFolder, options) {
+    // console.log(pathFrom, uploadFolder, options);
+    const folder = String(uploadFolder).replace(/\\/g, '/')
+    console.log(folder);
+    const upload = await cloudinary.uploader.upload(pathFrom, {
+        ...options,
+        folder,
+    });
+
+    return upload
+    // return 'Good'
 }
 
 async function getFiles(req, res, next) {
@@ -152,31 +167,46 @@ async function getFiles(req, res, next) {
     }
 }
 
+function getFileInfo(file) {
+    const metadata = getFileMetadata(file)
+    const isImage = isFileOfTypeImage(metadata.ext, metadata.mime)
+
+    if (isImage) {
+        return {
+            metadata,
+            type: 'image'
+        }
+    }
+    return {
+        metadata,
+        type: 'other'
+    }
+}
+
 function isFileOfTypeImage(ext, mime) {
     return imageExtensions.includes(ext) && imageMimeTypeRegex.test(mime)
 }
 
-function getFileMetadata(file) {
-    const parsedPath = path.parse(file.originalname)
+function getFileMetadata(filename) {
+    const parsedPath = path.parse(filename)
     const ext = parsedPath.ext.toLowerCase()
-    const filename = parsedPath.name
-    const m = mime.lookup(file.originalname)
-    return { ext, filename, mime: m }
+    const m = mime.lookup(filename)
+    return { ext, filename: parsedPath.name, mime: m }
 }
 
-function getUploadOptions(file) {
-    const { metadata, type } = getFileInfo(file)
-    const { filename, ext } = metadata;
+function getUploadOptions(filename) {
+    const { metadata, type } = getFileInfo(filename)
+    const { filename: publicFilename, ext } = metadata;
+
     switch (type) {
         case 'image': {
-            const publicId = filename
             return {
-                public_id: publicId,
+                public_id: publicFilename,
                 resource_type: 'image'
             }
         }
         case 'other': {
-            const publicId = `${filename}${ext}`
+            let publicId = `${publicFilename}${ext}`
             return {
                 public_id: publicId,
                 resource_type: 'raw'
