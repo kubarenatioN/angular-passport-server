@@ -56,7 +56,9 @@ async function uploadToRemote(req, res, next) {
     try {
         const readPath = path.join(globalThis.appRoot, rootTempUpload, rootFolder);
         const typesFolders = await readdir(readPath)
-        
+        const results = []
+        let total = 0;
+        let success = 0;
         for (const typeFolder of typesFolders) {
             // folder of type, e.g. 'tasks', 'topics'
             const filesFolders = await readdir(path.join(readPath, typeFolder))
@@ -67,16 +69,21 @@ async function uploadToRemote(req, res, next) {
                 const files = await readdir(fromFolder)
 
                 for (const filename of files) {
-
+                    total++
                     const upload = await uploadSingleFile({ pathFrom: path.join(fromFolder, filename), uploadFolder, filename })
-                    
+                    if (upload) {
+                        success++
+                        results.push(upload)
+                    }
                 }
             }
         }
 
-        return res.send({
-            message: 'File uploaded',
-            data: 'test 123',
+        return res.status(200).send({
+            message: 'Files uploaded to cloud',
+            res: results,
+            total,
+            success
         });
 
     } catch (err) {
@@ -123,23 +130,25 @@ async function uploadSingleFile({ pathFrom, uploadFolder, filename }) {
     }
     
     const options = getUploadOptions(filename);
-    ``
-    const uploaded = await uploadCloudinary(pathFrom, uploadFolder, options)
+
+    let uploaded = null
+    try {
+        uploaded = await uploadCloudinary(pathFrom, uploadFolder, options)
+    } catch (error) {
+        console.warn('Error upload to cloudinary');        
+    }
 
     return uploaded
 }
 
 async function uploadCloudinary(pathFrom, uploadFolder, options) {
-    // console.log(pathFrom, uploadFolder, options);
     const folder = String(uploadFolder).replace(/\\/g, '/')
-    console.log(folder);
     const upload = await cloudinary.uploader.upload(pathFrom, {
         ...options,
         folder,
     });
 
     return upload
-    // return 'Good'
 }
 
 async function getFiles(req, res, next) {
