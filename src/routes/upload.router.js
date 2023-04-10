@@ -6,6 +6,7 @@ const mime = require('mime-types');
 const { uploader, rootTempUpload } = require('../config/multer.config')
 const { getCurrentUTCTime } = require('../helpers/time.helper');
 const { unlink, readdir } = require('fs/promises');
+const { SELF_ORIGIN } = require('../config/urls');
 
 const router = new Router();
 
@@ -152,26 +153,37 @@ async function uploadCloudinary(pathFrom, uploadFolder, options) {
 }
 
 async function getFiles(req, res, next) {
+    let { folder, type } = req.query;
     try {
-        let { folder, type } = req.query;
+        folder = decodeURIComponent(folder);
         if (type === 'remote') {
-            folder = decodeURIComponent(folder);
             const data = await cloudinary.search
                 .expression(`folder:${folder}`)
                 .execute()
                 
-            return res.json(data)
+            return res.status(200).json(data)
         }
         else if (type === 'temp') {
-            console.log(folder);
-            return res.json({
-                message: 'Get files from temp.'
+            const filesFromFolder = await readdir(`${rootTempUpload}/${folder}`)
+            const files = []
+            for (const filename of filesFromFolder) {
+                files.push({
+                    filename,
+                    url: getLocalFileUrl(folder, filename)
+                })
+            }
+
+            return res.status(200).json({
+                message: 'Get files from local server.',
+                files,
+                total: files.length,
             })
         }
     } catch (error) {
         return res.status(500).json({
-            status: 'error',
+            message: 'Get files error',
             error,
+            source: type
         })
     }
 }
@@ -190,6 +202,10 @@ function getFileInfo(file) {
         metadata,
         type: 'other'
     }
+}
+
+function getLocalFileUrl(folder, filename) {
+    return `${SELF_ORIGIN}/local/${folder}/${filename}`
 }
 
 function isFileOfTypeImage(ext, mime) {

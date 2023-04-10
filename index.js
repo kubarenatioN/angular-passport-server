@@ -1,7 +1,7 @@
 const express = require('express')
 const cors = require('cors')
 const { connectDB } = require('./src/config/mongoose.config')
-const routesInit = require('./routes.init')
+const initRoutes = require('./routes.init')
 require('dotenv').config()
 require('./src/config/passport')
 
@@ -13,9 +13,10 @@ const PORT = process.env.PORT || 5000;
 app.use(cors())
 app.use(express.json())
 app.use('/static', express.static('public'))
+app.use('/local', express.static('tmp/uploads'))
 
 // Initialize routing
-routesInit(app)
+initRoutes(app)
 
 globalThis.appRoot = path.resolve(__dirname)
 
