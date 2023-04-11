@@ -1,5 +1,5 @@
 const Router = require('express').Router;
-const courseMembershipController = require('../../controllers/course-membership.controller');
+const courseMembershipController = require('../../controllers/course/course-membership.controller');
 
 const router = new Router();
 

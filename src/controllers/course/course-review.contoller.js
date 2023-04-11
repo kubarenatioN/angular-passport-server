@@ -1,6 +1,6 @@
-const CourseReview = require('../models/course-review.model')
-const { getCurrentUTCTime } =  require('../helpers/time.helper')
-const { reviewStatuses } = require('../constants/common.constants')
+const CourseReview = require('../../models/course-review.model')
+const { getCurrentUTCTime } =  require('../../helpers/time.helper')
+const { reviewStatuses } = require('../../constants/common.constants')
 
 class CourseReviewController {
 

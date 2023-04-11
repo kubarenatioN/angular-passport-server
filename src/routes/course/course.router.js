@@ -1,5 +1,5 @@
 const Router = require('express').Router;
-const coursesController = require('../../controllers/course.controller');
+const coursesController = require('../../controllers/course/course.controller');
 const authenticate = require('../../middlewares/authenticate.middleware');
 const isTeacher = require('../../middlewares/teacher-perm.middleware');
 require('dotenv').config()

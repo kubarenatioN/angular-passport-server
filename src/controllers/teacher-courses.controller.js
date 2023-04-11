@@ -1,5 +1,5 @@
-const model = require('../models/course-review.model')
-const { getCurrentUTCTime } =  require('../helpers/time.helper')
+const model = require('../../models/course-review.model')
+const { getCurrentUTCTime } =  require('../../helpers/time.helper')
 const courseMembershipController = require('./course-membership.controller');
 
 class TeacherCoursesController {

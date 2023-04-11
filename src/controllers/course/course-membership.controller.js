@@ -1,7 +1,5 @@
-const { enrollStatuses } = require('../constants/common.constants')
-const CourseMembership = require('../models/course-membership.model')
-const Course = require('../models/course.model')
-const User = require('../models/user.model')
+const { enrollStatuses } = require('../../constants/common.constants')
+const CourseMembership = require('../../models/course-membership.model')
 
 class CourseMembershipController {
 
@@ -20,7 +18,7 @@ class CourseMembershipController {
     }
 
     getMembers = async (req, res) => {
-        const { type, courseId, status, size, page, query } = req.body
+        const { type, courseId, status, size, page } = req.body
 
         if (type === 'list' && size != null && page != null) {
             const members = await CourseMembership.Model.find({

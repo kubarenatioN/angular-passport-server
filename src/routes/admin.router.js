@@ -1,7 +1,7 @@
 const Router = require('express').Router;
 const passport = require('passport');
-const coursesController = require('../controllers/course.controller');
-const courseReviewController = require('../controllers/course-review.contoller');
+const coursesController = require('../controllers/course/course.controller');
+const courseReviewController = require('../controllers/course/course-review.contoller');
 
 const router = Router();
 
@@ -12,12 +12,6 @@ const coursesRouter = Router()
 coursesRouter.post(
     '/review',
     coursesController.get
-);
-
-// TODO: Check for bugs
-coursesRouter.get(
-    '/review/:id',
-    coursesController.getOnReviewById
 );
 
 coursesRouter.put(
