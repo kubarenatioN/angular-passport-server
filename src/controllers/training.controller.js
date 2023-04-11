@@ -5,11 +5,14 @@ class TrainingController {
     addAnswer = async (req, res) => {
         const { answer } = req.body
 
-        const docRef = await trainingAnswers.add(answer)
-        return res.json({
-            docId: docRef.data()
-        })
-    }   
+        
+    }
+
+    addCheck = async (req, res) => {
+        const { check } = req.body
+
+        console.log();
+    }
 
     isAvailableForUser = async (req, res) => {
         const { userId, courseId } = req.body

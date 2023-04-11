@@ -7,6 +7,7 @@ const { uploader, rootTempUpload } = require('../config/multer.config')
 const { getCurrentUTCTime } = require('../helpers/time.helper');
 const { unlink, readdir } = require('fs/promises');
 const { SELF_ORIGIN } = require('../config/urls');
+const { existsSync } = require('fs');
 
 const router = new Router();
 
@@ -56,6 +57,11 @@ async function uploadToRemote(req, res, next) {
    
     try {
         const readPath = path.join(globalThis.appRoot, rootTempUpload, rootFolder);
+        if (!existsSync(readPath)) {
+            return res.status(200).json({
+                message: 'Nothing to move to cloud. No such folder found.'
+            })
+        }
         const typesFolders = await readdir(readPath)
         const results = []
         let total = 0;

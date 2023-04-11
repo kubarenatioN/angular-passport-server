@@ -3,8 +3,9 @@ const courseReviewController = require('./course-review.contoller')
 const courseTrainingConroller = require('./course-training.controller')
 
 const Course = require('../../models/course.model')
-const CourseTraining = require('../../models/course.model')
-const CourseMembership = require('../../models/course-membership.model')
+const CourseTraining = require('../../models/course-training.model')
+const CourseMembership = require('../../models/course-membership.model');
+const CourseReview = require('../../models/course-review.model');
 
 
 class CoursesController {
@@ -17,25 +18,49 @@ class CoursesController {
                 case 'review': {
                     const courses = await courseReviewController.select(req.body)
                     return res.status(200).json({
-                        type: 'review',
+                        type,
+                        data: courses
+                    })
+                }
+
+                case 'published': {
+                    const courses = await this.select(req.body)
+
+                    return res.status(200).json({
+                        type,
                         data: courses
                     })
                 }
 
                 case 'training': {
-                    const trainings = await courseTrainingConroller.get(req.body)
+                    const { authorId, fields, coursesIds } = req.body
+
+                    let userCourses = []
+                    if (authorId) {
+                        userCourses = await Course.Model.find({
+                            authorId,
+                        }).select('uuid')
+                    }
+
+                    const trainings = await courseTrainingConroller.get({
+                        coursesIds: userCourses ? userCourses.map(course => course.uuid) : [],
+                        uuid: coursesIds ?? [],
+                        fields,
+                    })
 
                     return res.status(200).json({
-                        type: 'training',
+                        type,
                         data: trainings
                     })
                 }
             
-                default:
-                    break;
+                default: {
+                    return res.status(404).json({
+                        data: [],
+                        message: 'No correct "type" provided.'
+                    })
+                }
             }
-
-            return res.json(response)
         } catch (error) {
             return res.status(500).json({
                 message: 'Error getting courses.',
@@ -49,9 +74,13 @@ class CoursesController {
         const { offset, limit } = pagination
 
         try {
-            const data = await Course.Model.find({
+            const data = await CourseTraining.Model.find({
 
-            }).skip(offset).limit(limit).select(fields)
+            }).skip(offset).limit(limit)
+            .populate({
+                path: 'course',
+                select: fields,
+            })
             
             return res.status(200).json({
                 message: 'Success',
@@ -76,7 +105,7 @@ class CoursesController {
     }
 
     publish = async (req, res) => {
-        const { course } = req.body
+        const { course, masterId } = req.body
         delete course._id
         course.createdAt = getCurrentUTCTime()
 
@@ -84,10 +113,17 @@ class CoursesController {
             const record = await Course.create(course)
 
             // Remove from review all records with masterId
+            const removed = await CourseReview.Model.deleteMany({
+                $or: [
+                    { uuid: masterId },
+                    { masterId }
+                ]
+            })
+            const courseTraining = await CourseTraining.createFromNewCourse(record._doc, getCurrentUTCTime());
 
             return res.status(200).json({
-                message: 'Success',
-                course: record
+                message: 'Success. Course training created.',
+                course: courseTraining
             });
         } catch (error) {
             return res.status(500).json({
@@ -107,18 +143,19 @@ class CoursesController {
 
             const coursesIds = userCourses.map(record => record.courseId)
 
-            const courses = await Course.Model.find({
+            const courseTrainings = await CourseTraining.Model.find({
                 uuid: {
                     $in: coursesIds
                 }
-            }).select(fields)
+            }).populate({
+                path: 'course',
+                select: fields
+            })
 
-            const data = userCourses.map(userCourse => {
-                const course = courses.find(c => c.uuid === userCourse.courseId)
-                return {
-                    ...userCourse._doc,
-                    course
-                }
+            const data = courseTrainings.map(training => {
+                const membership = userCourses.find(uc => uc.courseId === training.uuid)
+                training._doc.membership = membership
+                return training
             })
 
             return res.status(200).json({
