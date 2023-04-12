@@ -1,8 +1,6 @@
 const mongoose = require('mongoose')
 const Types = mongoose.Schema.Types
 
-
-
 const replyMessageSchema = new mongoose.Schema({
     type: {
         type: ['task', 'report', 'test', 'check'],
@@ -10,7 +8,7 @@ const replyMessageSchema = new mongoose.Schema({
     },
     data: {
         type: Object,
-        required: true
+        required: false
     },
     taskId: {
         type: String,

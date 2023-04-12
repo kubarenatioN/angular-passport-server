@@ -60,14 +60,6 @@ class UserController {
         }
 	}
 
-	async getById(req, res) {
-		const { id } = req.params;
-		const { rows } = await db.query(`SELECT id, username, photo, email, role FROM "${table}" where id = $1`, [id]);
-		res.status(200).json({
-            data: rows[0]
-        });
-	}
-
 	findByEmail = async ({email, socialId}) => {
         return User.Model.findOne({
             email,
@@ -98,9 +90,11 @@ class UserController {
                 username,
                 photo,
                 role,
+                _id,
             } = user;
 
             const payload = {
+                _id,
                 uuid,
                 email,
                 username,
@@ -124,26 +118,6 @@ class UserController {
             })
         }
     }
-
-	async getAll(req, res) {
-		const users = await db.query(`SELECT * FROM ${table}`);
-		res.json(users.rows);
-	}
-
-	async update(req, res) {
-		const { id, name, surname } = req.body;
-		const user = await db.query(
-			`UPDATE ${table} set name = $1, surname = $2 where id = $3 returning *`,
-			[name, surname, id]
-		);
-		res.json(user.rows[0]);
-	}
-
-	async delete(req, res) {
-		const { id } = req.params;
-		const users = await db.query(`DELETE FROM ${table} where id = $1`, [id]);
-		res.json(users.rows);
-	}
 }
 
 function createSalt() {

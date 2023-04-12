@@ -8,24 +8,43 @@ const TrainingReply = require('../models/training/training-reply.model');
 
 class TrainingController {
 
+    addReply = async (req, res) => {
+        const { reply } = req.body;
+        const { profile, sender, topicId, message } = reply;
+
+        try {
+            const newReply = new TrainingReply.Model({
+                uuid: generateUUID(),
+                topicId,
+                message,
+                profile,
+                sender,
+                date: getCurrentUTCTime()
+            })
+    
+            const saved = await newReply.save()
+    
+            return res.status(200).json({
+                message: 'Added new reply',
+                reply: saved
+            })
+        } catch (error) {
+            return res.status(500).json({
+                message: 'Error adding new reply',
+                reply: null
+            })
+        }
+    }
+
     addAnswer = async (req, res) => {
         const { answer, topicId, trainingId, studentId } = req.body
         const { type, data, taskId } = answer
 
         try {
-            let studentProfile = await TrainingProfile.Model.findOne({
-                training: trainingId,
-                student: studentId
+            const studentProfile = await this.getProfile({
+                trainingId,
+                studentId
             })
-    
-            if (!studentProfile) {
-                const newProfile = new TrainingProfile.Model({
-                    uuid: generateUUID(),
-                    training: trainingId,
-                    student: studentId    
-                })
-                studentProfile = await newProfile.save()
-            }
     
             const reply = new TrainingReply.Model({
                 uuid: generateUUID(),
@@ -75,6 +94,71 @@ class TrainingController {
         })
     }
 
+    getProfile = async ({ trainingId, studentId }) => {        
+        const studentProfile = await TrainingProfile.Model.findOne({
+            training: trainingId,
+            student: studentId
+        }).populate({
+            path: 'training',
+            model: 'CourseTraining',
+            populate: {
+                path: 'course',
+                model: 'Course',
+            }
+        })
+
+        return studentProfile
+    }
+
+    createProfile = async (req, res) => {
+        const { trainingId, studentId } = req.body
+
+        try {
+            const exists = await TrainingProfile.Model.exists({
+                trainingId,
+                studentId,
+            })
+    
+            if (exists._id != null) {
+                return res.status(200).json({
+                    message: 'Profile already exists.',
+                    profile: exists,
+                })
+            }
+            
+            const studentProfile = await this._createProfile(req.body)
+            const profile = await TrainingProfile.Model.findOne({
+                _id: studentProfile._id
+            })
+
+            return res.status(200).json({
+                message: 'Profile created.',
+                profile,
+            })
+
+        } catch (error) {
+             return res.status(500).json({
+                message: 'Error creating training profile.',
+                profile: null,
+                studentId,
+                trainingId,
+            })
+        }
+    }
+
+    _createProfile = async (payload) => {
+        const { trainingId, studentId } = payload
+
+        const newProfile = new TrainingProfile.Model({
+            uuid: generateUUID(),
+            training: trainingId,
+            student: studentId    
+        })
+
+        const created = await newProfile.save()
+
+        return created
+    }
 }
 
 const controller = new TrainingController()

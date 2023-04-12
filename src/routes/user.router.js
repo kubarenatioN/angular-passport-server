@@ -7,7 +7,9 @@ const router = new Router();
 router.get(
     '/:id',
     authenticate(),
-    userController.getById
+    async (req, res) => {
+        return res.json('Not implemented')
+    }
 )
 
 module.exports = router
