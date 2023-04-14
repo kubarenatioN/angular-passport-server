@@ -26,11 +26,6 @@ router.post(
     trainingController.isAvailableForTraining
 );
 
-// router.post(
-//     '/profile/create',
-//     trainingController.createProfile
-// );
-
 router.post(
     '/profile',
     async (req, res) => {
@@ -57,6 +52,11 @@ router.post(
         }
     }
 );
+
+router.post(
+    '/discussion',
+    trainingController.getDiscussionThread
+)
 
 router.post(
     '/reply',

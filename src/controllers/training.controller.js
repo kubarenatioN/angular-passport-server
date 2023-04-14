@@ -93,49 +93,28 @@ class TrainingController {
         }
     }
 
-    // addAnswer = async (req, res) => {
-    //     const { answer, topicId, trainingId, studentId } = req.body
-    //     const { type, data, taskId } = answer
+    getDiscussionThread = async (req, res) => {
+        const { profileId, topicId } = req.body
 
-    //     try {
-    //         const studentProfile = await this.getProfile({
-    //             trainingId,
-    //             studentId
-    //         })
-    
-    //         const reply = new TrainingReply.Model({
-    //             uuid: generateUUID(),
-    //             topicId,
-    //             profile: studentProfile._id,
-    //             message: {
-    //                 type,
-    //                 data,
-    //                 taskId,
-    //             },
-    //             sender: studentId,
-    //             date: getCurrentUTCTime()
-    //         })
-    
-    //         const saved = await reply.save()
-    
-    //         return res.status(200).json({
-    //             message: 'Answer saved.',
-    //             answer: saved
-    //         })   
+        try {
 
-    //     } catch (error) {
-    //         return res.status(500).json({
-    //             message: 'Add answer error: something went wrong.',
-    //             answer: req.body
-    //         })
-    //     }
-    // }
-
-    // addCheck = async (req, res) => {
-    //     const { check } = req.body
-
-    //     console.log();
-    // }
+            const discussion = await TrainingReply.Model.find({
+                topicId,
+                profile: profileId
+            })
+            
+            return res.status(200).json({
+                message: 'Get topic discussion',
+                discussion,
+            })
+        } catch (error) {
+            return res.status(500).json({
+                message: 'Error getting topic discussion',
+                discussion: null,
+            })
+        }
+        
+    }
 
     isAvailableForTraining = async (req, res) => {
         const { userId, trainingUUId } = req.body

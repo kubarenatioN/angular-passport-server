@@ -31,14 +31,19 @@ class CourseMembershipController {
     }
 
     getMembersProfiles = async (req, res) => {
-        const { type, trainingId, status, size, page, populate } = req.body
+        const { type, trainingId, enrollment, size, page, populate } = req.body
 
         try {
-            if (type === 'list' && size != null && page != null) {
+            if (type === 'list' && size != null) {
+                const skip = size === -1 ? 0 : size * (page ?? 0)
+                const limit = size === -1 ? 0 : size
+
                 const members = await TrainingProfile.Model.find({
                     training: trainingId,
-                    enrollment: status,
-                }).skip(page * size).limit(size)
+                    enrollment,
+                })
+                .skip(skip)
+                .limit(limit)
                 .populate(populate)
     
                 return res.status(200).json({
