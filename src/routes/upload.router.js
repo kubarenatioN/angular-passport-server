@@ -56,7 +56,7 @@ async function uploadToRemote(req, res, next) {
     const { rootFolder } = req.body;
    
     try {
-        const readPath = path.join(globalThis.appRoot, rootTempUpload, rootFolder);
+        const readPath = path.join(globalThis.appRoot, rootTempUpload, 'review', rootFolder);
         if (!existsSync(readPath)) {
             return res.status(200).json({
                 message: 'Nothing to move to cloud. No such folder found.'
@@ -72,7 +72,7 @@ async function uploadToRemote(req, res, next) {
             for (const filesFolder of filesFolders) {
                 // closest folder to files, name is a uuid of form control
                 const fromFolder = path.join(readPath, typeFolder, filesFolder)
-                const uploadFolder = path.join(rootFolder, typeFolder, filesFolder)
+                const uploadFolder = path.join('course', rootFolder, typeFolder, filesFolder)
                 const files = await readdir(fromFolder)
 
                 for (const filename of files) {
