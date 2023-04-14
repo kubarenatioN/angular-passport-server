@@ -16,6 +16,11 @@ const schema = new mongoose.Schema({
         type: Types.ObjectId,
         required: true,
         ref: 'User'
+    },
+    enrollment: {
+        type: String,
+        enum: ['pending', 'approved', 'rejected'],
+        required: true,
     }
 })
 

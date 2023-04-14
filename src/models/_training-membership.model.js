@@ -1,15 +1,17 @@
 const mongoose = require('mongoose')
 const Types = mongoose.Schema.Types
-const User = require('../models/user.model')
+const User = require('./user.model')
 
 const schema = new mongoose.Schema({
-    userId: {
-        type: String,
+    student: {
+        type: Types.ObjectId,
         required: true,
+        ref: 'User'
     },
-    courseId: {
-        type: String,
+    training: {
+        type: Types.ObjectId,
         required: true,
+        ref: 'CourseTraining'
     },
     status: {
         type: String,
@@ -18,7 +20,7 @@ const schema = new mongoose.Schema({
     },
 })
 
-const model = mongoose.model('CourseMembership', schema, 'coursesMembership')
+const model = mongoose.model('TrainingMembership', schema, 'trainingsMembership')
 
 module.exports = {
     Model: model,

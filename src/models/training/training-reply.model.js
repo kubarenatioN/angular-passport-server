@@ -3,7 +3,8 @@ const Types = mongoose.Schema.Types
 
 const replyMessageSchema = new mongoose.Schema({
     type: {
-        type: ['task', 'report', 'test', 'check'],
+        type: String,
+        enum: ['task', 'report', 'test', 'check'],
         required: true,
     },
     data: {

@@ -1,6 +1,5 @@
 const mongoose = require('mongoose')
 const Types = mongoose.Schema.Types
-const { generateUUID } = require('../helpers/common.helper')
 
 const schema = new mongoose.Schema({
     uuid: {
@@ -32,9 +31,9 @@ const model = mongoose.model('CourseTraining', schema, 'courseTrainings')
 module.exports = {
     Model: model,
 
-    createFromNewCourse: async (course, startAt) => {
+    createFromNewCourse: async (uuid, course, startAt) => {
         const training = new model({
-            uuid: generateUUID(),
+            uuid,
             courseId: course.uuid,
             course: course._id,
             status: 'active',

@@ -1,11 +1,11 @@
 const { getCurrentUTCTime } = require('../../helpers/time.helper');
 const courseReviewController = require('./course-review.contoller')
-const courseTrainingConroller = require('./course-training.controller')
 
 const Course = require('../../models/course.model')
-const CourseTraining = require('../../models/course-training.model')
-const CourseMembership = require('../../models/course-membership.model');
+const CourseTraining = require('../../models/training/course-training.model')
+const CourseMembership = require('../../models/_training-membership.model');
 const CourseReview = require('../../models/course-review.model');
+const { generateUUID } = require('../../helpers/common.helper');
 
 
 class CoursesController {
@@ -31,28 +31,6 @@ class CoursesController {
                         data: courses
                     })
                 }
-
-                case 'training': {
-                    const { authorId, fields, coursesIds } = req.body
-
-                    let userCourses = []
-                    if (authorId) {
-                        userCourses = await Course.Model.find({
-                            authorId,
-                        }).select('uuid')
-                    }
-
-                    const trainings = await courseTrainingConroller.get({
-                        coursesIds: userCourses ? userCourses.map(course => course.uuid) : [],
-                        uuid: coursesIds ?? [],
-                        fields,
-                    })
-
-                    return res.status(200).json({
-                        type,
-                        data: trainings
-                    })
-                }
             
                 default: {
                     return res.status(404).json({
@@ -64,31 +42,6 @@ class CoursesController {
         } catch (error) {
             return res.status(500).json({
                 message: 'Error getting courses.',
-                error,
-            })
-        }
-    }
-
-    list = async (req, res) => {
-        const { pagination, fields } = req.body
-        const { offset, limit } = pagination
-
-        try {
-            const data = await CourseTraining.Model.find({
-
-            }).skip(offset).limit(limit)
-            .populate({
-                path: 'course',
-                select: fields,
-            })
-            
-            return res.status(200).json({
-                message: 'Success',
-                data
-            })
-        } catch (error) {
-            return res.status(500).json({
-                message: 'Error getting courses catalog.',
                 error,
             })
         }
@@ -119,7 +72,7 @@ class CoursesController {
                     { masterId }
                 ]
             })
-            const courseTraining = await CourseTraining.createFromNewCourse(record._doc, getCurrentUTCTime());
+            const courseTraining = await CourseTraining.createFromNewCourse(generateUUID(), record._doc, getCurrentUTCTime());
 
             return res.status(200).json({
                 message: 'Success. Course training created.',
