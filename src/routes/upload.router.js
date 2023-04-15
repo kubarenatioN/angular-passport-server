@@ -53,10 +53,14 @@ router.post(
 router.get('/files', getFiles)
 
 async function uploadToRemote(req, res, next) {
-    const { rootFolder } = req.body;
-   
+    const { fromFolder } = req.body;
+    let { toFolder } = req.body
+    if (!toFolder) {
+        toFolder = fromFolder
+    }
+
     try {
-        const readPath = path.join(globalThis.appRoot, rootTempUpload, 'review', rootFolder);
+        const readPath = path.join(globalThis.appRoot, rootTempUpload, fromFolder);
         if (!existsSync(readPath)) {
             return res.status(200).json({
                 message: 'Nothing to move to cloud. No such folder found.'
@@ -72,7 +76,7 @@ async function uploadToRemote(req, res, next) {
             for (const filesFolder of filesFolders) {
                 // closest folder to files, name is a uuid of form control
                 const fromFolder = path.join(readPath, typeFolder, filesFolder)
-                const uploadFolder = path.join('course', rootFolder, typeFolder, filesFolder)
+                const uploadFolder = path.join(toFolder, typeFolder, filesFolder)
                 const files = await readdir(fromFolder)
 
                 for (const filename of files) {
@@ -97,7 +101,7 @@ async function uploadToRemote(req, res, next) {
         return res.status(500).json({
             message: 'Error uploading files to cloud.',
             err,
-            origin: rootFolder
+            origin: fromFolder
         });
     }
 }
