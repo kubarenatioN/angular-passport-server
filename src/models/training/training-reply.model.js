@@ -1,17 +1,21 @@
 const mongoose = require('mongoose')
 const Types = mongoose.Schema.Types
 
-const replyMessageSchema = new mongoose.Schema({
-    type: {
+const replyTaskAnswerSchema = new mongoose.Schema({
+    taskId: {
         type: String,
-        enum: ['task', 'report', 'test', 'check'],
+    },
+    comment: {
+        type: String,
+    },
+    files: {
+        type: Types.Array,
         required: true,
     },
-    data: {
-        type: Object,
-        required: false
-    },
-    taskId: {
+})
+
+const replyReportSchema = new mongoose.Schema({
+    report: {
         type: String,
     },
 })
@@ -21,6 +25,14 @@ const schema = new mongoose.Schema({
         required: true,
         type: String,
         unique: true,
+    },
+    type: {
+        type: String,
+        enum: ['task', 'report', 'test', 'check'],
+        required: true,
+    },
+    taskId: {
+        type: String,
     },
     topicId: {
         type: String,
@@ -33,7 +45,8 @@ const schema = new mongoose.Schema({
     },
     message: {
         required: true,
-        type: replyMessageSchema
+        type: Types.Mixed,
+        enum: [replyTaskAnswerSchema, replyReportSchema]
     },
     sender: {
         type: Types.ObjectId,

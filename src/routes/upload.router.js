@@ -7,7 +7,7 @@ const { uploader, rootTempUpload } = require('../config/multer.config')
 const { getCurrentUTCTime } = require('../helpers/time.helper');
 const { unlink, readdir } = require('fs/promises');
 const { SELF_ORIGIN } = require('../config/urls');
-const { existsSync } = require('fs');
+const { existsSync, rmSync } = require('fs');
 
 const router = new Router();
 
@@ -35,14 +35,9 @@ router.post(
 router.post(
 	'/remote',
 	authenticate(),
-	uploadToRemote
+	moveToRemote
 );
 
-router.post(
-	'/clear',
-	authenticate(),
-    clearTempFolder
-);
 
 router.post(
 	'/temp/delete',
@@ -52,24 +47,51 @@ router.post(
 
 router.get('/files', getFiles)
 
-async function uploadToRemote(req, res, next) {
-    const { fromFolder } = req.body;
+async function moveToRemote(req, res, next) {
+    const { fromFolder, subject } = req.body;
     let { toFolder } = req.body
+
     if (!toFolder) {
         toFolder = fromFolder
     }
+    let move
 
+    if (subject === 'course:build') {
+        move = await moveCourseFolderToRemote(fromFolder, toFolder)
+
+    } else if (subject === 'training:task') {
+        move = await moveTrainingTaskToRemote(fromFolder)
+    } else {
+        return res.status(404).json({
+            message: 'Incorrect subject'
+        })
+    }
+
+    const {status, message, result} = move
+
+    return res.status(status).json({
+        message,
+        result,
+    })
+}
+
+async function moveCourseFolderToRemote(fromFolder, toFolder) {
     try {
         const readPath = path.join(globalThis.appRoot, rootTempUpload, fromFolder);
         if (!existsSync(readPath)) {
-            return res.status(200).json({
-                message: 'Nothing to move to cloud. No such folder found.'
-            })
+            return {
+                message: 'Nothing to move to cloud. No such folder found.',
+                status: 404,
+                result: {
+                    origin: fromFolder
+                }
+            }
         }
         const typesFolders = await readdir(readPath)
         const results = []
         let total = 0;
         let success = 0;
+        let removed = 0;
         for (const typeFolder of typesFolders) {
             // folder of type, e.g. 'tasks', 'topics'
             const filesFolders = await readdir(path.join(readPath, typeFolder))
@@ -81,40 +103,112 @@ async function uploadToRemote(req, res, next) {
 
                 for (const filename of files) {
                     total++
-                    const upload = await uploadSingleFile({ pathFrom: path.join(fromFolder, filename), uploadFolder, filename })
-                    if (upload) {
-                        success++
-                        results.push(upload)
+                    try {
+                        const upload = await uploadSingleFile({ pathFrom: path.join(fromFolder, filename), uploadFolder, filename })
+                        if (upload) {
+                            results.push(upload)
+                            success++
+    
+                            // remove file from local after upload to cloud
+                            await unlink(path.join(fromFolder, filename))
+                            removed++
+                        }
+                    } catch (error) {
+                        console.log('Error upload single file:', error);
                     }
                 }
             }
         }
 
-        return res.status(200).send({
-            message: 'Files uploaded to cloud',
-            res: results,
-            total,
-            success
-        });
+        // remove whole course-build folder
+        if (removed === total) {
+            rmSync(readPath, {
+                recursive: true
+            })
+            console.log('removed course building root folder:', readPath);
+        }
+        
+        return {
+            message: 'Course build files uploaded to cloud',
+            status: 200,
+            result: {
+                results,
+                total,
+                success,
+            },
+        }
 
-    } catch (err) {
-        return res.status(500).json({
+    } catch (error) {
+        return {
             message: 'Error uploading files to cloud.',
-            err,
-            origin: fromFolder
-        });
+            status: 500,
+            result: {
+                origin: fromFolder,
+                error
+            },
+        }
     }
 }
 
-async function clearTempFolder(req, res, next) {
-    const { tempFolder } = req.body
+async function moveTrainingTaskToRemote(fromFolder) {
+    try {
+        const readPath = path.join(globalThis.appRoot, rootTempUpload, fromFolder);
+        if (!existsSync(readPath)) {
+            return {
+                message: 'Nothing to move to cloud. No such folder found.',
+                status: 404,
+                result: {
+                    origin: fromFolder
+                }
+            }
+        }
+        const trainingTaskFolder = await readdir(readPath)
+        const results = []
+        let total = 0;
+        let success = 0;
+        let removed = 0;
+        for (const filename of trainingTaskFolder) {
+            total++
 
-    // Remove files here
+            const upload = await uploadSingleFile({ 
+                pathFrom: path.join(readPath, filename), 
+                uploadFolder: fromFolder, 
+                filename
+            })
 
-    return res.status(200).json({
-        message: 'Cancel upload',
-        folder: tempFolder
-    })
+            if (upload) {
+                results.push(upload)
+                success++
+
+                await unlink(path.join(readPath, filename))
+                removed++
+            }
+        }
+        
+        return {
+            message: 'Training task files uploaded to cloud.',
+            status: 200,
+            result: {
+                results,
+                total,
+                success,
+            },
+        }
+
+    } catch (error) {
+        rmSync(fromFolder, {
+            recursive: true
+        })
+        console.log('Delete training task folder due to cloud upload error:', fromFolder);
+        return {
+            message: 'Error uploading training files to cloud.',
+            status: 500,
+            result: {
+                origin: fromFolder,
+                error
+            },
+        }
+    }
 }
 
 async function deleteTempFile(req, res, next) {
@@ -145,8 +239,11 @@ async function uploadSingleFile({ pathFrom, uploadFolder, filename }) {
     let uploaded = null
     try {
         uploaded = await uploadCloudinary(pathFrom, uploadFolder, options)
+
     } catch (error) {
-        console.warn('Error upload to cloudinary');        
+        const message = 'Error upload to cloudinary'
+        console.warn(message);
+        throw new Error(message)
     }
 
     return uploaded

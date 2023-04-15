@@ -25,7 +25,7 @@ class TrainingController {
             })
 
             if (authorId) {
-                trainings = trainings.filter(training => training.course.authorId === authorId)    
+                trainings = trainings.filter(training => training.course && training.course.authorId === authorId)    
             }
 
             return res.status(200).json({
@@ -67,12 +67,14 @@ class TrainingController {
 
     addReply = async (req, res) => {
         const { reply } = req.body;
-        const { profile, sender, topicId, message } = reply;
+        const { profile, sender, topicId, message, taskId, type } = reply;
 
         try {
             const newReply = new TrainingReply.Model({
                 uuid: generateUUID(),
                 topicId,
+                type,
+                taskId,
                 message,
                 profile,
                 sender,
