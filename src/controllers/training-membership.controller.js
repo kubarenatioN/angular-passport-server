@@ -121,13 +121,13 @@ class CourseMembershipController {
             throw new Error()
         }
         
-        const records = studentsIds.map(studentId => ({
+        const trainingProfiles = studentsIds.map(studentId => ({
             uuid: generateUUID(),
             student: studentId,
             training: trainingId,
             enrollment: enrollStatuses.pending
         }))
-        const inserted = await TrainingProfile.Model.insertMany(records)
+        const inserted = await TrainingProfile.Model.insertMany(trainingProfiles)
 
         return inserted
     }

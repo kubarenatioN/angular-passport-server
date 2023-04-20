@@ -184,6 +184,14 @@ async function moveTrainingTaskToRemote(fromFolder) {
                 removed++
             }
         }
+
+         // remove whole profile training tasks folder
+         if (removed === total) {
+            rmSync(readPath, {
+                recursive: true
+            })
+            console.log('removed profile training folder:', readPath);
+        }
         
         return {
             message: 'Training task files uploaded to cloud.',

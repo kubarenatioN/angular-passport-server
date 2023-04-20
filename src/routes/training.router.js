@@ -6,8 +6,10 @@ const authenticate = require('../middlewares/authenticate.middleware');
 const router = Router()
 
 const membershipRouter = require('./training-membership.router')
+const progressRouter = require('./training-progress.router')
 
 router.use('/membership', authenticate(), membershipRouter)
+router.use('/progress', authenticate(), progressRouter)
 
 router.post(
 	'/select',
