@@ -8,7 +8,7 @@ router.post(
     progressController.get
 )
 
-router.post(
+router.patch(
     '/add',
     progressController.addRecord
 )
