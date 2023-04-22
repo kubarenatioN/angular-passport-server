@@ -6,8 +6,20 @@ const signToken = (payload, secretKey) => {
     });
 }
 
-const verifyToken = (token, secretKey, cb) => {
-    jwt.verify(token, secretKey, cb);
+const verifyToken = (token, secretKey) => {
+    const hash = token.split(' ')[1]
+    return new Promise((res, rej) => {
+        jwt.verify(hash, secretKey, (err, payload) => {
+            try {
+                if (err) {
+                    rej(err)
+                }
+                res(payload)
+            } catch (error) {
+                rej(error)
+            }
+        });
+    })
 }
 
 module.exports = { signToken, verifyToken }

@@ -1,11 +1,15 @@
-const { enrollStatuses } = require('../constants/common.constants')
 const { generateUUID } = require('../helpers/common.helper');
 const { getCurrentUTCTime } = require('../helpers/time.helper');
+const { verifyToken } = require('../helpers/token-helper');
+require('dotenv').config()
 
-const CourseMembership = require('../models/_training-membership.model');
 const TrainingProfile = require('../models/training/training-profile.model');
 const CourseTraining = require('../models/training/course-training.model');
 const TrainingReply = require('../models/training/training-reply.model');
+
+const progressController = require('../controllers/progress.controller');
+
+const { JWT_PRIVATE_KEY } = process.env
 
 class TrainingController {
 
@@ -62,6 +66,40 @@ class TrainingController {
                 message: 'Error getting courses catalog.',
                 error,
             })
+        }
+    }
+
+    getProfile = async (req, res) => {
+        const include = decodeURIComponent(req.query.include)
+
+        try {
+            let progress;
+            const token = req.headers.authorization
+            const payload = await verifyToken(token, JWT_PRIVATE_KEY)
+            const senderId = payload._id
+
+            const profile = await this._getProfile(req.body)
+
+            const hasAccess = profile && senderId === profile.student.toString()
+
+            if (include.split(',').includes('progress')) {
+                const profileId = profile._id.toString()
+                progress = await progressController._getAllProgressByProfile(profileId)
+            }
+
+            return res.status(200).json({
+                message: 'Get training profile.',
+                profile: hasAccess ? profile : null,
+                hasAccess,
+                progress
+            })
+    
+        } catch (error) {
+            console.error(error);
+            return res.status(500).json({
+                message: 'Error getting training profile.',
+                profile: null
+            })                
         }
     }
 
@@ -158,10 +196,12 @@ class TrainingController {
         
     }
 
-    getProfile = async (params) => {
-        const { trainingId, studentId, fields } = params
+    _getProfile = async (params) => {
+        const { trainingId, studentId, fields, uuid } = params
 
-        const query = {
+        const query = uuid ? {
+            uuid
+        } : {
             training: trainingId,
             student: studentId,
         }

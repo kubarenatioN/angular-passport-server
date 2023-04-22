@@ -37,29 +37,31 @@ router.get('/login/failed', (req, res) => {
 router.post('/register', userController.create);
 
 /* Get User object by token */
-router.post('/user', (req, res) => {
-	let token = '';
-	try {
-		token = req.get('Authorization').split(' ')[1];
-	} catch (e) {
-		return res.status(400).json({
-			message: 'Incorrect token',
-			error: e,
-		});
-	}
+router.post('/user', async (req, res) => {
+	// let token = '';
+	// try {
+	// 	token = req.get('Authorization').split(' ')[1];
+	// } catch (e) {
+	// 	return res.status(400).json({
+	// 		message: 'Incorrect token',
+	// 		error: e,
+	// 	});
+	// }
+    const token = req.get('Authorization')
 
-	verifyToken(token, JWT_PRIVATE_KEY, (err, user) => {
-		if (err) {
-			return res.status(400).json({
-				message: 'Error while parsing token',
-                error: err
-			});
-		}
-		return res.status(200).json({
-			user,
-			message: 'Success auth',
-		});
-	});
+    try {
+	    const payload = await verifyToken(token, JWT_PRIVATE_KEY);
+        return res.status(200).json({
+            user: payload,
+            message: 'Success auth',
+        });
+    } catch (error) {
+        return res.status(400).json({
+            message: 'Error while parsing token',
+            error
+        });
+    }
+
 });
 
 module.exports = router;
