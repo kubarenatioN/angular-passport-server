@@ -4,29 +4,6 @@ const TrainingProfile = require('../models/training/training-profile.model')
 
 class ProgressController {
 
-    // getAll = async (req, res) => {
-    //     const { profileId } = req.body
-
-    //     try {
-    //         const progressProfiles = await ProfileProgress.Model.find({
-    //             profile: profileId,
-    //         })
-    
-    //         return res.status(200).json({
-    //             message: 'Progresses found.',
-    //             progressProfiles,
-    //         })
-
-    //     } catch (error) {
-    //         return res.status(500).json({
-    //             message: 'Server error: get profile progress.',
-    //             progressProfiles: [],
-    //             error
-    //         }) 
-    //     }
-        
-    // }
-
     get = async (req, res) => {
         const { profileId, topicId } = req.body
 
@@ -70,7 +47,7 @@ class ProgressController {
         const { profileId } = req.body
 
         try {
-            const profiles = this._getAllProgressByProfile(profileId)
+            const profiles = await this._getAllProgressByProfile(profileId)
     
             return res.status(200).json({
                 message: 'Progresses found.',
@@ -90,8 +67,8 @@ class ProgressController {
         const { profileId, topicId } = req.body
         
         try {
-            const progress = this._getProgressByTopic(profileId, topicId)
-    
+            const progress = await this._getProgressByTopic(profileId, topicId)
+
             if (!progress) {
                 const trainingProfile = await TrainingProfile.Model.findOne({
                     _id: profileId,

@@ -14,7 +14,7 @@ const { JWT_PRIVATE_KEY } = process.env
 class TrainingController {
 
     select = async (req, res) => {
-        const { authorId, trainingsIds, fields, uuid } = req.body
+        const { authorId, trainingsIds, fields, uuid, populate } = req.body
 
         try {
             const query = {}
@@ -22,11 +22,13 @@ class TrainingController {
                 query['uuid'] = trainingsIds
             }
 
-            let trainings = await CourseTraining.Model.find(query)
-            .populate({
+            const p = populate ? populate : {
                 path: 'course',
                 select: fields
-            })
+            }
+
+            let trainings = await CourseTraining.Model.find(query)
+            .populate(p)
 
             if (authorId) {
                 trainings = trainings.filter(training => training.course && training.course.authorId === authorId)    
@@ -77,10 +79,15 @@ class TrainingController {
             const token = req.headers.authorization
             const payload = await verifyToken(token, JWT_PRIVATE_KEY)
             const senderId = payload._id
+            const senderUUId = payload.uuid
+            const senderRole = payload.role
 
             const profile = await this._getProfile(req.body)
 
-            const hasAccess = profile && senderId === profile.student.toString()
+            const isIssuerOwnProfile = senderId === profile?.student._id.toString()
+            const isIssuerTeacher = senderUUId === profile?.training.course.authorId && senderRole === 'teacher'
+
+            const hasAccess = profile && (isIssuerOwnProfile || isIssuerTeacher)
 
             if (include.split(',').includes('progress')) {
                 const profileId = profile._id.toString()
@@ -156,44 +163,34 @@ class TrainingController {
         
     }
 
-    isAvailableForTraining = async (req, res) => {
-        const { userId, trainingUUId } = req.body
+    getStudentProfiles = async (req, res) => {
+        const { studentId, fields } = req.body
 
         try {
-            const training = await CourseTraining.Model.findOne({
-                uuid: trainingUUId
-            })
-    
-            if (!training) {
-                return res.status(404).json({
-                    hasAccess: false,
-                    message: 'No training found with UUID provided.'
-                })
-            }
-
-            const profile = await TrainingProfile.Model.findOne({
-                student: userId,
-                training: training._id
+            const profiles = await TrainingProfile.Model.find({
+                student: studentId
+            }).populate({
+                path: 'training',
+                model: 'CourseTraining',
+                populate: {
+                    path: 'course',
+                    model: 'Course',
+                    select: fields ?? []
+                }
             })
 
-            if (!profile) {
-                return res.status(404).json({
-                    hasAccess: false,
-                    message: 'Profile for given request not found.'
-                })
-            }
-
-            const hasAccess = profile.enrollment === 'approved'
-    
             return res.status(200).json({
-                message: 'Student has access for training. Profile found.',
-                hasAccess: hasAccess,
-                profile,
+                message: 'Get student profiles.',
+                profiles,
             })
+
         } catch (error) {
-            
+            return res.status(500).json({
+                message: 'Error getting student profiles.',
+                error,
+                profiles: null,
+            })
         }
-        
     }
 
     _getProfile = async (params) => {
@@ -206,15 +203,21 @@ class TrainingController {
             student: studentId,
         }
 
-        const studentProfile = await TrainingProfile.Model.findOne(query).populate({
-            path: 'training',
-            model: 'CourseTraining',
-            populate: {
-                path: 'course',
-                model: 'Course',
-                select: fields ?? []
+        const studentProfile = await TrainingProfile.Model.findOne(query).populate([
+            {
+                path: 'training',
+                model: 'CourseTraining',
+                populate: {
+                    path: 'course',
+                    model: 'Course',
+                    select: fields ?? []
+                }
+            },
+            {
+                path: 'student',
+                model: 'User'
             }
-        })
+        ])
 
         return studentProfile
     }

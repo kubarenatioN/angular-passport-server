@@ -23,10 +23,11 @@ router.post(
 	trainingController.list
 );
 
-// router.post(
-//     '/access',
-//     trainingController.isAvailableForTraining
-// );
+router.post(
+	'/student',
+	authenticate(),
+	trainingController.getStudentProfiles
+);
 
 router.post(
     '/profile',
@@ -42,11 +43,5 @@ router.post(
     '/reply',
     trainingController.addReply
 );
-
-// router.post(
-//     '/check',
-//     isTeacher,
-//     trainingController.addReply
-// );
 
 module.exports = router;
