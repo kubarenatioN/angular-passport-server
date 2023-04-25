@@ -30,6 +30,13 @@ router.post(
 );
 
 router.post(
+    '/profiles',
+	authenticate(),
+    isTeacher,
+    trainingController.getTrainingProfiles
+);
+
+router.post(
     '/profile',
     trainingController.getProfile
 );

@@ -3,7 +3,6 @@ const courseReviewController = require('./course-review.contoller')
 
 const Course = require('../../models/course.model')
 const CourseTraining = require('../../models/training/course-training.model')
-const CourseMembership = require('../../models/_training-membership.model');
 const CourseReview = require('../../models/course-review.model');
 const { generateUUID } = require('../../helpers/common.helper');
 

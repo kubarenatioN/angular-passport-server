@@ -6,6 +6,7 @@ require('dotenv').config()
 const TrainingProfile = require('../models/training/training-profile.model');
 const CourseTraining = require('../models/training/course-training.model');
 const TrainingReply = require('../models/training/training-reply.model');
+const Personalization = require('../models/personalization.model');
 
 const progressController = require('../controllers/progress.controller');
 
@@ -24,7 +25,8 @@ class TrainingController {
 
             const p = populate ? populate : {
                 path: 'course',
-                select: fields
+                model: 'Course',
+                select: [...fields, 'authorId']
             }
 
             let trainings = await CourseTraining.Model.find(query)
@@ -107,6 +109,50 @@ class TrainingController {
                 message: 'Error getting training profile.',
                 profile: null
             })                
+        }
+    }
+
+    getTrainingProfiles = async (req, res) => {
+        const { trainingId } = req.body
+        const { include } = req.query
+        
+        try {
+            const populate = [
+                {
+                    path: 'student',
+                    model: 'User',
+                },
+            ]
+    
+            let profiles = await TrainingProfile.Model.find({
+                training: trainingId
+            }).populate(populate)
+    
+            if (include.includes('personalization')) {
+                const personalizations = await Personalization.Model.find({
+                    profile: profiles.map(p => p._id)
+                }).populate({
+                    path: 'task',
+                    model: 'TrainingTask'
+                })
+                profiles = profiles.map(profile => {
+                    const profilePersonalizations = personalizations.filter(pers => pers.profile.toString() === profile._id.toString())
+                    return {
+                        ...profile._doc,
+                        personalizations: profilePersonalizations
+                    }
+                })
+            }
+    
+            return res.status(200).json({
+                message: 'Get training profiles',
+                profiles
+            })
+        } catch (error) {
+            return res.status(500).json({
+                message: 'Error: Get training profiles',
+                error
+            })
         }
     }
 

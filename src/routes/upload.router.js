@@ -61,6 +61,8 @@ async function moveToRemote(req, res, next) {
 
     } else if (subject === 'training:task') {
         move = await moveTrainingTaskToRemote(fromFolder)
+    } else if (subject === 'personalization:task') {
+        move = await moveTrainingTaskToRemote(fromFolder)
     } else {
         return res.status(404).json({
             message: 'Incorrect subject'
