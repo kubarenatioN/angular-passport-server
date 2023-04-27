@@ -74,10 +74,11 @@ class TrainingController {
     }
 
     getProfile = async (req, res) => {
-        const include = decodeURIComponent(req.query.include)
+        const include = decodeURIComponent(req.query.include).split(',')
 
         try {
             let progress;
+            let personalization;
             const token = req.headers.authorization
             const payload = await verifyToken(token, JWT_PRIVATE_KEY)
             const senderId = payload._id
@@ -91,16 +92,23 @@ class TrainingController {
 
             const hasAccess = profile && (isIssuerOwnProfile || isIssuerTeacher)
 
-            if (include.split(',').includes('progress')) {
+            if (include.includes('progress')) {
                 const profileId = profile._id.toString()
                 progress = await progressController._getAllProgressByProfile(profileId)
+            }
+
+            if (include.includes('personalization')) {
+                personalization = await Personalization.Model.find({
+                    profile: profile._id
+                }).populate('task')
             }
 
             return res.status(200).json({
                 message: 'Get training profile.',
                 profile: hasAccess ? profile : null,
                 hasAccess,
-                progress
+                progress,
+                personalization,
             })
     
         } catch (error) {
@@ -114,7 +122,7 @@ class TrainingController {
 
     getTrainingProfiles = async (req, res) => {
         const { trainingId } = req.body
-        const { include } = req.query
+        const include = decodeURIComponent(req.query.include)
         
         try {
             const populate = [
@@ -128,7 +136,7 @@ class TrainingController {
                 training: trainingId
             }).populate(populate)
     
-            if (include.includes('personalization')) {
+            if (include && include.includes('personalization')) {
                 const personalizations = await Personalization.Model.find({
                     profile: profiles.map(p => p._id)
                 }).populate({
