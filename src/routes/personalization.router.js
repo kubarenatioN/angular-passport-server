@@ -3,18 +3,23 @@ const personalizationController = require('../controllers/personalization.contro
 
 const router = new Router();
 
+router.get(
+    '/:profileId',
+    personalizationController.getProfilePersonalization
+)
+
 router.post(
     '/assign',
     personalizationController.assignTasks
 )
 
 router.get(
-    '/task',
-    personalizationController.getTasks
+    '/teacher/task',
+    personalizationController.getTeacherTasks
 )
 
 router.post(
-    '/task',
+    '/teacher/task',
     personalizationController.createTask
 )
 

@@ -29,18 +29,18 @@ const schema = new mongoose.Schema({
             // required: true,
             type: Array,
         },
+        type: {
+            required: true,
+            type: String,
+            enum: ['common', 'personal'],
+            default: 'personal'
+        }
     },
     authorId: {
         required: true,
         type: Types.ObjectId,
         ref: 'User'
     },
-    type: {
-        required: true,
-        type: String,
-        enum: ['common', 'personal'],
-        default: 'common'
-    }
 })
 
 const model = mongoose.model('TrainingTask', schema, 'trainingTasks')

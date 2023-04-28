@@ -27,7 +27,34 @@ class PersonalizationController {
         }
     }
 
-    getTasks = async (req, res) => {
+    getProfilePersonalization = async (req, res) => {
+        const { profileId } = req.params
+        let { type } = req.query
+
+        try {
+            const findQuery = {
+                profile: profileId,
+            }
+            if (type) {
+                findQuery.type = type
+            }
+
+            const personalization = await Personalization.Model.find(findQuery).populate('task')
+
+            return res.status(200).json({
+                message: 'Get profile personalization',
+                personalization
+            })
+
+        } catch (error) {
+            return res.status(500).json({
+                message: 'Error: get personal profile tasks.',
+                error,
+            })
+        }
+    }
+
+    getTeacherTasks = async (req, res) => {
         const { authorId, topicId, trainingId } = req.query
 
         try {

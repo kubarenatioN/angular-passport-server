@@ -26,7 +26,7 @@ class TrainingController {
             const p = populate ? populate : {
                 path: 'course',
                 model: 'Course',
-                select: [...fields, 'authorId']
+                select: fields ?? ['authorId']
             }
 
             let trainings = await CourseTraining.Model.find(query)
