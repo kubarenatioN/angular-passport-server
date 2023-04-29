@@ -9,11 +9,21 @@ const personalizationRouter = require('./src/routes/personalization.router')
 const isAdmin = require('./src/middlewares/admin.middlewares')
 const authenticate = require('./src/middlewares/authenticate.middleware')
 
+const quizRouter = Router()
+quizRouter.post('/', async (req, res) => {
+    console.log('get tests request', req.body);
+
+    return res.status(200).json({
+        body: req.body
+    })
+})
+
 function init(app) {
     const apiRouter = Router()
     apiRouter.use('/courses', coursesRouter)
     apiRouter.use('/training', trainingRouter)
     apiRouter.use('/personalization', personalizationRouter)
+    apiRouter.use('/quiz', quizRouter)
     // apiRouter.use('/boards', boardsRouter)
 
     app.use('/api', apiRouter)
