@@ -30,6 +30,21 @@ const profileProgressRecordSchema = new mongoose.Schema({
     }
 })
 
+const profileQuizRecordSchema = new mongoose.Schema({
+    uuid: {
+        type: String,
+        required: true,
+    },
+    mark: {
+        type: Number,
+        required: true
+    },
+    date: {
+        type: String,
+        required: true
+    },
+})
+
 const schema = new mongoose.Schema({
     uuid: {
         required: true,
@@ -48,6 +63,9 @@ const schema = new mongoose.Schema({
     },
     records: {
         type: [profileProgressRecordSchema]
+    },
+    quiz: {
+        type: [profileQuizRecordSchema]
     }
 })
 

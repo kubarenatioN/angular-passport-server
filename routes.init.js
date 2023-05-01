@@ -6,17 +6,11 @@ const userRouter = require('./src/routes/user.router')
 const uploadRouter = require('./src/routes/upload.router')
 const trainingRouter = require('./src/routes/training.router')
 const personalizationRouter = require('./src/routes/personalization.router')
+const quizRouter = require('./src/routes/quiz.router')
 const isAdmin = require('./src/middlewares/admin.middlewares')
 const authenticate = require('./src/middlewares/authenticate.middleware')
 
-const quizRouter = Router()
-quizRouter.post('/', async (req, res) => {
-    console.log('get tests request', req.body);
 
-    return res.status(200).json({
-        body: req.body
-    })
-})
 
 function init(app) {
     const apiRouter = Router()
