@@ -4,6 +4,7 @@ const userController = require('../controllers/user.controller');
 const { verifyToken } = require('../helpers/token-helper');
 const socialSuccessAuth = require('../middlewares/social-auth-success.middleware');
 require('dotenv').config();
+const User = require('../models/user.model')
 
 const router = Router();
 const { JWT_PRIVATE_KEY } = process.env;
@@ -42,8 +43,12 @@ router.post('/user', async (req, res) => {
 
     try {
 	    const payload = await verifyToken(token, JWT_PRIVATE_KEY);
-        return res.status(200).json({
-            user: payload,
+			const user = await User.Model.findOne({
+				_id: payload._id
+			}).populate('trainingProfile')
+
+			return res.status(200).json({
+            user,
             message: 'Success auth',
         });
     } catch (error) {

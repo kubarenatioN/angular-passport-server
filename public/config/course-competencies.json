@@ -1,12 +1,106 @@
 [
     {
-        "category": "IT",
-        "items": [
-            "backend",
-            "databases",
-            "c-sharp",
-            "javascript",
-            "sql"
-        ]
+        "id": "programming",
+        "label": "Программирование",
+        "category": "it"
+    },
+    {
+        "category": "it",
+        "id": "web-development",
+        "label": "Веб-разработка"
+    },
+    {
+        "category": "it",
+        "id": "web-design",
+        "label": "Веб-дизайн"
+    },
+    {
+        "category": "it",
+        "id": "data-science",
+        "label": "Наука о данных"
+    },
+    {
+        "category": "it",
+        "id": "databases",
+        "label": "Базы данных"
+    },
+    {
+        "category": "it",
+        "id": "oracle-db",
+        "label": "Oracle DB"
+    },
+    {
+        "category": "it",
+        "id": "sql",
+        "label": "SQL"
+    },
+    {
+        "category": "it",
+        "id": "mysql-db",
+        "label": "MySQL"
+    },
+    {
+        "id": "design",
+        "label": "Дизайн"
+    },
+    {
+        "id": "marketing",
+        "label": "Маркетинг"
+    },
+    {
+        "id": "business",
+        "label": "Бизнес"
+    },
+    {
+        "id": "finance",
+        "label": "Финансы"
+    },
+    {
+        "id": "leadership",
+        "label": "Лидерство"
+    },
+    {
+        "id": "language-learning",
+        "label": "Изучение языков"
+    },
+    {
+        "id": "personal-development",
+        "label": "Личностное развитие"
+    },
+    {
+        "id": "cooking",
+        "label": "Кулинария"
+    },
+    {
+        "id": "photography",
+        "label": "Фотография"
+    },
+    {
+        "id": "music",
+        "label": "Музыка"
+    },
+    {
+        "id": "history",
+        "label": "История"
+    },
+    {
+        "id": "philosophy",
+        "label": "Философия"
+    },
+    {
+        "id": "psychology",
+        "label": "Психология"
+    },
+    {
+        "id": "fitness",
+        "label": "Фитнес"
+    },
+    {
+        "id": "education",
+        "label": "Образование"
+    },
+    {
+        "id": "science",
+        "label": "Наука"
     }
 ]

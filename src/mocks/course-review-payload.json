@@ -1,0 +1,83 @@
+{
+  "course": {
+      "uuid": "FrZq_BzjRSOEcsZDroGpw",
+      "masterId": null,
+      "authorId": "LeJp1ZirSGVf_QHhjGt3X",
+      "title": "Курс 123",
+      "description": "Коллективное бессознательное, иcходя из того, что стабильно. Воспитание притягивает инсайт. Психоанализ теоретически возможен. Мышление пространственно интегрирует филосовский психоз. Интеллект аннигилирует эгоцентризм.",
+      "category": "machinery",
+      "competencies": {
+          "acquired": [
+              {
+                  "id": "1",
+                  "label": "SQL"
+              }
+          ],
+          "required": [
+              {
+                  "id": "2",
+                  "label": "Базы данных"
+              }
+          ]
+      },
+      "comments": {
+          "title": null,
+          "description": null,
+          "category": null,
+          "acquiredCompetencies": null,
+          "requiredCompetencies": null
+      },
+      "modules": [
+          {
+              "id": "MRz3pz8edQ_bcyCu6jGOW",
+              "title": "Новый модуль 1",
+              "description": "Описание модуля... 1",
+              "topics": [
+                  {
+                      "id": "sBsxNSsZA9WAzsoDmLZyL",
+                      "title": "Новая тема 123",
+                      "description": "",
+                      "materials": [
+                          "Тезис - Angular CD.docx"
+                      ],
+                      "theory": "Теория 123",
+                      "testLink": "https://forms.gle/rnFThKcTXzqz5BAS9",
+                      "startDate": "2023-05-21T21:00:00.000Z",
+                      "endDate": "2023-05-23T21:00:00.000Z",
+                      "comments": {
+                          "title": null,
+                          "description": null,
+                          "materials": null,
+                          "theory": null,
+                          "testLink": null
+                      },
+                      "practice": {
+                          "goal": "Цель практической работы - изучить Базы данных",
+                          "tasks": [
+                              {
+                                  "id": "SE_-Bvk-0sqE44wKDZMj-",
+                                  "taskDescr": "Создать 5 классов с демонстрацией принципов ООП",
+                                  "materials": [
+                                      "test-text-file.rtf"
+                                  ],
+                                  "comment": "Очень важный комментарий от студента Васи Васильевича",
+                                  "comments": {
+                                      "taskDescr": null,
+                                      "materials": null,
+                                      "comment": null
+                                  }
+                              }
+                          ]
+                      }
+                  }
+              ],
+              "comments": {
+                  "title": null,
+                  "description": null
+              }
+          }
+      ],
+      "status": "ReadyForReview"
+  },
+  "isMaster": true
+}
