@@ -1,6 +1,6 @@
-const mongoose = require('mongoose')
-const { userRoles } = require('../constants/common.constants')
-const Types = mongoose.Schema.Types
+const mongoose = require('mongoose');
+const { userRoles } = require('../constants/common.constants');
+const Types = mongoose.Schema.Types;
 
 const schema = new mongoose.Schema({
     uuid: {
@@ -13,7 +13,7 @@ const schema = new mongoose.Schema({
         type: String,
         unique: true,
     },
-    username: {        
+    username: {
         required: true,
         type: String,
         unique: true,
@@ -27,21 +27,31 @@ const schema = new mongoose.Schema({
     role: {
         required: true,
         type: String,
-        default: userRoles.student
+        default: userRoles.student,
+    },
+    permission: {
+        type: String,
+        enum: ['student', 'teacher'],
+        default: 'student'
     },
     photo: {
         type: String,
     },
     socialType: {
-        type: String
+        type: String,
     },
     socialId: {
-        type: String
+        type: String,
     },
-})
+    trainingProfile: {
+        type: Types.ObjectId,
+        ref: 'UserTrainingProfile',
+        required: true,
+    }
+});
 
-const model = mongoose.model('User', schema, 'users')
+const model = mongoose.model('User', schema, 'users');
 
 module.exports = {
     Model: model,
-}
+};

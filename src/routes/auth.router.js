@@ -14,7 +14,7 @@ router.get(
 	'/login/google',
 	passport.authenticate('google', {
 		scope: ['profile', 'email'],
-        prompt : 'select_account',
+		prompt : 'select_account',
 		session: false,
 	})
 );
@@ -38,16 +38,7 @@ router.post('/register', userController.create);
 
 /* Get User object by token */
 router.post('/user', async (req, res) => {
-	// let token = '';
-	// try {
-	// 	token = req.get('Authorization').split(' ')[1];
-	// } catch (e) {
-	// 	return res.status(400).json({
-	// 		message: 'Incorrect token',
-	// 		error: e,
-	// 	});
-	// }
-    const token = req.get('Authorization')
+		const token = req.get('Authorization')
 
     try {
 	    const payload = await verifyToken(token, JWT_PRIVATE_KEY);

@@ -1,40 +1,56 @@
 require('dotenv').config();
 const crypto = require('crypto');
-const { db } = require('../database/db');
 const { generateUUID } = require('../helpers/common.helper');
 const User = require('../models/user.model');
+const UserTrainingProfile = require('../models/user-training-profile.model');
 const { signToken, verifyToken } = require('../helpers/token-helper');
 
-const table = 'users-test';
 const { JWT_PRIVATE_KEY } = process.env;
 
 class UserController {
     
     create = async (req, res) => {
-		const { email, password } = req.body;
-        const salt = createSalt();
-        const hash = hashPassword(password, salt);
-        const uuid = generateUUID()
 
-        const user = new User.Model({
-            uuid,
-            email,
-            username: email,
-            salt,
-            password: hash,
-        })
-        const created = await user.save()
+        try {
+            const { email, password } = req.body;
+            const salt = createSalt();
+            const hash = hashPassword(password, salt);
+            const uuid = generateUUID()
 
-        res.status(200).json({
-            message: 'User created',
-            user: {
-                _id: created._id,
+            const trainingProfile = await (new UserTrainingProfile.Model({
+                uuid: generateUUID(),
+                competencies: [],
+                finishedTrainigns: [],
+            })).save()
+
+            const user = new User.Model({
                 uuid,
                 email,
                 username: email,
-                role: created.role
-            }
-        });
+                salt,
+                password: hash,
+                trainingProfile: trainingProfile._id
+            })
+            const created = await user.save()
+
+            res.status(200).json({
+                message: 'User created',
+                user: {
+                    _id: created._id,
+                    uuid,
+                    email,
+                    username: email,
+                    role: created.role,
+                    permission: created.permission,
+                }
+            });
+
+        } catch (error) {
+            return res.status(500).json({
+                message: 'Error registering new user.',
+            })
+        }
+		
 	}
 
 	createFromSocial = async (user) => {
@@ -48,7 +64,8 @@ class UserController {
             socialId,
             socialType,
             photo,
-            role: 'student'
+            role: 'student',
+            permission: 'student',
         }).save()
 
         return {
@@ -57,6 +74,7 @@ class UserController {
             username,
             photo,
             role: created.role,
+            permission: created.permission,
         }
 	}
 
@@ -64,7 +82,7 @@ class UserController {
         return User.Model.findOne({
             email,
             socialId,
-        })
+        }).populate('trainingProfile')
 	}
 
     loginJwt = async (req, res) => {
@@ -91,6 +109,7 @@ class UserController {
                 photo,
                 role,
                 _id,
+                permission,
             } = user;
 
             const payload = {
@@ -100,6 +119,7 @@ class UserController {
                 username,
                 photo,
                 role,
+                permission
             }
 
             const token = signToken(payload, JWT_PRIVATE_KEY);
