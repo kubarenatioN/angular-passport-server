@@ -23,6 +23,10 @@ const schema = new mongoose.Schema({
         required: true,
         type: String,
         default: 'active'
+    },
+    bundle: {
+        required: false,
+        type: Types.ObjectId,
     }
 })
 

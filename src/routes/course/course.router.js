@@ -6,11 +6,13 @@ require('dotenv').config()
 
 const reviewRouter = require('./course-review.router')
 const teacherRouter = require('./course-teacher.router')
+const bundleRouter = require('./course-bundle.router')
 
 const router = new Router();
 
 router.use('/review', authenticate(), reviewRouter)
 router.use('/teacher', authenticate(), isTeacher, teacherRouter)
+router.use('/bundle', authenticate(), bundleRouter)
 
 router.post(
 	'/select',
