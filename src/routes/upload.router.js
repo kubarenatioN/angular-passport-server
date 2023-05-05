@@ -83,7 +83,7 @@ async function moveCourseFolderToRemote(fromFolder, toFolder) {
         if (!existsSync(readPath)) {
             return {
                 message: 'Nothing to move to cloud. No such folder found.',
-                status: 404,
+                status: 204,
                 result: {
                     origin: fromFolder
                 }
@@ -158,7 +158,7 @@ async function moveTrainingTaskToRemote(fromFolder) {
         if (!existsSync(readPath)) {
             return {
                 message: 'Nothing to move to cloud. No such folder found.',
-                status: 404,
+                status: 204,
                 result: {
                     origin: fromFolder
                 }

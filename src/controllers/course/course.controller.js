@@ -71,11 +71,12 @@ class CoursesController {
                     { masterId }
                 ]
             })
-            const courseTraining = await CourseTraining.createFromNewCourse(generateUUID(), record._doc, getCurrentUTCTime());
+            // dont create more new trainings from courses by default
+            // const courseTraining = await CourseTraining.createFromNewCourse(generateUUID(), record._doc, getCurrentUTCTime());
 
             return res.status(200).json({
-                message: 'Success. Course training created.',
-                course: courseTraining
+                message: 'Success. Course created.',
+                course: record
             });
         } catch (error) {
             return res.status(500).json({

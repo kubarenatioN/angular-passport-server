@@ -45,7 +45,4 @@ module.exports = {
         })
         return (await training.save())._doc
     }
-    // withCourses: async (ids) => {
-    //     const courses = 
-    // }
 }
