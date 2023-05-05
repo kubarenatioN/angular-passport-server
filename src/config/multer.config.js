@@ -13,7 +13,7 @@ const uploader = multer({
             cb(null, folder)
         },
 		filename: (req, file, cb) => {
-			//originalname is the uploaded file's name with extn
+			file.originalname = Buffer.from(file.originalname, 'latin1').toString('utf8')
 			cb(null, file.originalname);
 		},
 	}),
