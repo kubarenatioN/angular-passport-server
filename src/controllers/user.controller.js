@@ -91,15 +91,15 @@ class UserController {
             const user = await this.findByEmail({ email: reqEmail })
             
             if (!user) {
-                throw new Error('User not found.')
+                return handleRequestError(res, 404, 'User not found.')
             }
 
             if (!user.salt) {
-                throw new Error('No user salt found.')
+                return handleRequestError(res, 404, 'No user salt found.')
             }
 
             if (!comparePasswords(password, user.salt, user.password)) {
-                throw new Error('Incorrect password.')
+                return handleRequestError(res, 404, 'Incorrect password.')
             }
 
             const {
@@ -150,6 +150,14 @@ function hashPassword(password, salt) {
 
 function comparePasswords(password, salt, hash) {
 	return hashPassword(password, salt) === hash;
+}
+
+function handleRequestError(res, code, message) {
+    return res.status(code).json({
+        message,
+        token: null,
+        user: null,
+    })
 }
 
 const controller = new UserController();

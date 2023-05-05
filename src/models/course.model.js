@@ -23,6 +23,10 @@ const schema = new mongoose.Schema({
         required: true,
         type: Object,
     },
+    topics: {
+        required: true,
+        type: Object,
+    },
     createdAt: {
         required: true,
         type: String,
@@ -37,7 +41,7 @@ const schema = new mongoose.Schema({
     },
     isActive: {
         type: Boolean
-    }   
+    }
 })
 
 const model = mongoose.model('Course', schema, 'courses')

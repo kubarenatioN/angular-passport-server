@@ -40,7 +40,12 @@ router.post('/register', userController.create);
 /* Get User object by token */
 router.post('/user', async (req, res) => {
 		const token = req.get('Authorization')
-
+		if (!token) {
+			return res.status(200).json({
+				message: 'No token',
+				user: null,
+			})
+		}
     try {
 	    const payload = await verifyToken(token, JWT_PRIVATE_KEY);
 			const user = await User.Model.findOne({
