@@ -10,6 +10,7 @@ const Personalization = require('../models/personalization.model');
 
 const progressController = require('../controllers/progress.controller');
 const Course = require('../models/course.model');
+const ProfileProgress = require('../models/progress/profile-progress.model');
 
 const { JWT_PRIVATE_KEY } = process.env
 
@@ -113,6 +114,40 @@ class TrainingController {
     } 
 
     complete = async (req, res) => {
+        const { id } = req.params
+
+        try {
+            const training = await CourseTraining.Model.findOne({
+                uuid: id,
+            })
+ 
+            training.status = 'archived'
+            const updated = await training.save()
+
+            const profiles = await TrainingProfile.Model.find({
+                training: training._id
+            }).populate('student')
+            // Here calculate students results
+            console.log(profiles);
+            profiles.forEach(async profile => {
+                const progress = ProfileProgress.Model.find({
+                    profile: profile._id
+                })
+
+                console.log(`Profile: ${profile.uuid}. Progress: ${progress.uuid}`);
+            })
+            
+            return res.status(200).json({
+                origin: 'Complete training',
+                message: 'Ok',
+                updated,
+            })
+        } catch (error) {
+            return res.status(500).json({
+                origin: 'Complete training',
+                error
+            })
+        }
         
     } 
 

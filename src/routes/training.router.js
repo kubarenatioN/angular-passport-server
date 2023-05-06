@@ -16,6 +16,11 @@ router.post(
 	trainingController.start
 )
 
+router.patch(
+	'/complete/:id',
+	trainingController.complete
+)
+
 router.post(
 	'/select',
 	authenticate(),

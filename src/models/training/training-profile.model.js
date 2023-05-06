@@ -19,7 +19,7 @@ const schema = new mongoose.Schema({
     },
     enrollment: {
         type: String,
-        enum: ['pending', 'approved', 'rejected'],
+        enum: ['pending', 'approved', 'rejected', 'completed'],
         required: true,
     }
 })
