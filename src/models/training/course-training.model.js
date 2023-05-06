@@ -1,4 +1,6 @@
 const mongoose = require('mongoose')
+const { generateUUID } = require('../../helpers/common.helper')
+const { getCurrentUTCTime } = require('../../helpers/time.helper')
 const Types = mongoose.Schema.Types
 
 const schema = new mongoose.Schema({
@@ -22,12 +24,8 @@ const schema = new mongoose.Schema({
     status: {
         required: true,
         type: String,
-        default: 'active'
+        enum: ['active', 'archived'],
     },
-    bundle: {
-        required: false,
-        type: Types.ObjectId,
-    }
 })
 
 const model = mongoose.model('CourseTraining', schema, 'courseTrainings')
@@ -44,5 +42,16 @@ module.exports = {
             startAt,
         })
         return (await training.save())._doc
+    },
+
+    startFromCourse: async (course) => {
+        const training = await new model({
+            uuid: generateUUID(),
+            courseId: course.uuid,
+            course: course._id,
+            status: 'active',
+            startAt: getCurrentUTCTime(),
+        }).save()
+        return training
     }
 }

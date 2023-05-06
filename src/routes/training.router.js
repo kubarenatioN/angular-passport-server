@@ -12,6 +12,11 @@ router.use('/membership', authenticate(), membershipRouter)
 router.use('/progress', authenticate(), progressRouter)
 
 router.post(
+	'/start/:id',
+	trainingController.start
+)
+
+router.post(
 	'/select',
 	authenticate(),
 	trainingController.select

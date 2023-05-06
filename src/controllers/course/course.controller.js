@@ -34,7 +34,7 @@ class CoursesController {
                 default: {
                     return res.status(404).json({
                         data: [],
-                        message: 'No correct "type" provided.'
+                        message: 'Incorrect "type" provided.'
                     })
                 }
             }
@@ -48,11 +48,27 @@ class CoursesController {
 
     select = async (options) => {
         const { authorId, coursesIds, fields } = options
+        const include = decodeURIComponent(options?.include)
         const courses = await Course.get({
             authorId,
             ids: coursesIds,
             fields
         })
+
+        if (include.includes('training')) {
+            const trainings = await CourseTraining.Model.find({
+                course: courses.map(c => c._id)
+            })
+
+            courses.forEach((course, i, arr) => {
+                const courseTraining = trainings.find(t => {
+                    return t.course.toString() === course._id.toString() && t.status === 'active'
+                })
+
+                arr[i]._doc['training'] = courseTraining
+            })
+        }
+        
         return courses;
     }
 
@@ -71,8 +87,6 @@ class CoursesController {
                     { masterId }
                 ]
             })
-            // dont create more new trainings from courses by default
-            // const courseTraining = await CourseTraining.createFromNewCourse(generateUUID(), record._doc, getCurrentUTCTime());
 
             return res.status(200).json({
                 message: 'Success. Course created.',

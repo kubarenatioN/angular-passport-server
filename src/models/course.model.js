@@ -39,9 +39,10 @@ const schema = new mongoose.Schema({
         // required: true,
         type: Object,
     },
-    isActive: {
-        type: Boolean
-    }
+    bundle: {
+        required: false,
+        type: Types.ObjectId,
+    },
 })
 
 const model = mongoose.model('Course', schema, 'courses')

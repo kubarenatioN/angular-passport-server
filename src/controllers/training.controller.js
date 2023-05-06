@@ -9,6 +9,7 @@ const TrainingReply = require('../models/training/training-reply.model');
 const Personalization = require('../models/personalization.model');
 
 const progressController = require('../controllers/progress.controller');
+const Course = require('../models/course.model');
 
 const { JWT_PRIVATE_KEY } = process.env
 
@@ -26,7 +27,7 @@ class TrainingController {
             const p = populate ? populate : {
                 path: 'course',
                 model: 'Course',
-                select: fields ?? ['authorId']
+                select: fields && fields.length > 0 ? [...fields, 'status'] : []
             }
 
             let trainings = await CourseTraining.Model.find(query)
@@ -72,6 +73,47 @@ class TrainingController {
             })
         }
     }
+
+    start = async (req, res) => {
+        const { id } = req.params
+
+        try {
+            const course = await Course.Model.findOne({
+                uuid: id,
+            })
+
+            const courseTrainings = await CourseTraining.Model.find({
+                course: course._id
+            })
+
+            const isActiveExists = courseTrainings.some(training => training.status === 'active')
+
+            if (isActiveExists) {
+                return res.status(404).json({
+                    origin: 'Start training',
+                    error: 'Active training by provided course already exists.',
+                    training: null
+                })
+            }
+
+            const training = await CourseTraining.startFromCourse(course)
+            console.log(training);
+            return res.status(200).json({
+                message: 'Training started!',
+                training
+            })
+        } catch (error) {
+            return res.status(500).json({
+                origin: 'Start training',
+                training: null,
+                error
+            })
+        }
+    } 
+
+    complete = async (req, res) => {
+        
+    } 
 
     getProfile = async (req, res) => {
         const include = decodeURIComponent(req.query.include).split(',')
