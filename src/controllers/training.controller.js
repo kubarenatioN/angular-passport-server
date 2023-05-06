@@ -55,7 +55,7 @@ class TrainingController {
 
         try {
             const data = await CourseTraining.Model.find({
-
+                status: 'active'
             }).skip(offset).limit(limit)
             .populate({
                 path: 'course',
@@ -76,6 +76,7 @@ class TrainingController {
 
     start = async (req, res) => {
         const { id } = req.params
+        const { startAt } = req.body
 
         try {
             const course = await Course.Model.findOne({
@@ -96,8 +97,8 @@ class TrainingController {
                 })
             }
 
-            const training = await CourseTraining.startFromCourse(course)
-            console.log(training);
+            const training = await CourseTraining.startFromCourse(course, startAt)
+
             return res.status(200).json({
                 message: 'Training started!',
                 training

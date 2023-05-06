@@ -9,6 +9,10 @@ const schema = new mongoose.Schema({
         required: true,
         unique: true
     },
+    title: {
+        required: true,
+        type: String,
+    },
     course: {
         type: Types.ObjectId,
         ref: 'Course'
@@ -44,13 +48,14 @@ module.exports = {
         return (await training.save())._doc
     },
 
-    startFromCourse: async (course) => {
+    startFromCourse: async (course, startAt) => {
         const training = await new model({
             uuid: generateUUID(),
+            title: course.title,
             courseId: course.uuid,
             course: course._id,
             status: 'active',
-            startAt: getCurrentUTCTime(),
+            startAt,
         }).save()
         return training
     }
