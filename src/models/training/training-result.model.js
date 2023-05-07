@@ -7,16 +7,21 @@ const schema = new mongoose.Schema({
         type: String,
         unique: true,
     },
-    competencies: {
-        type: [String],
+    profile: {
+      required: true,
+      type: Types.ObjectId
     },
-    trainingHistory: {
-        type: [Types.ObjectId],
-        ref: 'TrainingResult'
-    }
+    summary: {
+      score: {
+        type: Number,
+      },
+    },
+    date: {
+      type: String,
+    },
 });
 
-const model = mongoose.model('UserTrainingProfile', schema, 'usersTrainingProfiles');
+const model = mongoose.model('TrainingResult', schema, 'trainingResults');
 
 module.exports = {
     Model: model,

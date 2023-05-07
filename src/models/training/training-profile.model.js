@@ -19,8 +19,13 @@ const schema = new mongoose.Schema({
     },
     enrollment: {
         type: String,
-        enum: ['pending', 'approved', 'rejected', 'completed'],
+        enum: ['pending', 'approved', 'rejected'],
         required: true,
+    },
+    status: {
+        type: String,
+        enum: ['completed', 'active'],
+        default: 'active',
     }
 })
 

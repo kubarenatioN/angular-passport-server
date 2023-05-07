@@ -11,8 +11,11 @@ const Personalization = require('../models/personalization.model');
 const progressController = require('../controllers/progress.controller');
 const Course = require('../models/course.model');
 const ProfileProgress = require('../models/progress/profile-progress.model');
+const TrainingResult = require('../models/training/training-result.model');
 
 const { JWT_PRIVATE_KEY } = process.env
+
+const QUIZ_MARK_RATE = 100
 
 class TrainingController {
 
@@ -120,22 +123,83 @@ class TrainingController {
             const training = await CourseTraining.Model.findOne({
                 uuid: id,
             })
- 
-            training.status = 'archived'
-            const updated = await training.save()
 
+            const { competencies } = (await Course.Model.findOne({
+                _id: training.course
+            }).select('competencies'))
+            const completeDate = getCurrentUTCTime()
+ 
             const profiles = await TrainingProfile.Model.find({
-                training: training._id
-            }).populate('student')
-            // Here calculate students results
-            console.log(profiles);
+                training: training._id,
+                enrollment: 'approved'
+            }).populate({
+                path: 'student',
+                model: 'User',
+                populate: {
+                    path: 'trainingProfile',
+                    model: 'UserTrainingProfile'
+                }
+            })
+
             profiles.forEach(async profile => {
-                const progress = ProfileProgress.Model.find({
+                const profileTopicsProgress = await ProfileProgress.Model.find({
                     profile: profile._id
                 })
 
-                console.log(`Profile: ${profile.uuid}. Progress: ${progress.uuid}`);
+                // console.log('Calculate profile:', profile.uuid, 'student: ', profile.student);
+
+                const tasksRecords = []
+                const quizRecords = []
+
+                profileTopicsProgress.forEach(progress => {
+                    if (progress.records.length > 0) {
+                        tasksRecords.push(...progress.records)
+                    }
+
+                    const lastTopicQuiz = progress.quiz[progress.quiz.length - 1]
+                    if (lastTopicQuiz) {
+                        quizRecords.push(lastTopicQuiz)
+                    }
+                })
+
+                const lastTasksRecords = tasksRecords
+                    .sort((a, b) => new Date(b.date) - new Date(a.date))
+                    .reduce((acc, record) => {
+                        if (acc.findIndex(item => item.taskId === record.taskId) === -1) {
+                            acc.push(record)
+                        }
+                        return acc
+                    }, [])
+
+                const tasksScore = lastTasksRecords.reduce((score, record) => score + record.mark, 0)
+                const quizesScore = quizRecords.reduce((score, record) => score + (record.mark * QUIZ_MARK_RATE), 0)
+
+                const score = tasksScore + quizesScore
+
+                const trainingResult = await (new TrainingResult.Model({
+                    uuid: generateUUID(),
+                    date: completeDate,
+                    profile: profile._id,
+                    summary: {
+                        score
+                    }
+                })).save()
+
+                const userTrainingProfile = profile.student.trainingProfile
+
+                const updateCompetencies = [...new Set([...userTrainingProfile.competencies, ...competencies.acquired])]
+
+                userTrainingProfile.competencies = updateCompetencies
+                userTrainingProfile.trainingHistory.push(trainingResult._id)
+                await userTrainingProfile.save()
+
+                profile.status = 'completed'
+
+                await profile.save()
             })
+
+            training.status = 'archived'
+            const updated = await training.save()
             
             return res.status(200).json({
                 origin: 'Complete training',
