@@ -73,11 +73,13 @@ class CoursesController {
     }
 
     publish = async (req, res) => {
-        const { course, masterId } = req.body
-        delete course._id
-        course.createdAt = getCurrentUTCTime()
-
         try {
+            const { course, masterId } = req.body
+            if (course._id) {
+                delete course._id
+            }
+            course.createdAt = getCurrentUTCTime()
+
             const record = await Course.create(course)
 
             // Remove from review all records with masterId
