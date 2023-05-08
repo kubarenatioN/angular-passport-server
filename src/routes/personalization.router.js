@@ -9,8 +9,8 @@ router.get(
 )
 
 router.post(
-    '/assign',
-    personalizationController.assignTasks
+    '/',
+    personalizationController.handlePersonalization
 )
 
 router.get(

@@ -6,8 +6,53 @@ const Personalization = require('../models/personalization.model')
 
 class PersonalizationController {
 
+    handlePersonalization = async (req, res) => {
+        const { type } = req.query
+
+        try {
+            switch (type) {
+                case 'assignment':
+                    return this.assignTasks(req, res)
+                
+                case 'opening':
+                    return this.openTasks(req, res)
+                    
+                default:
+                    return res.status(204).json({
+                        origin: 'Personalization'
+                    })
+            }
+
+
+        } catch (error) {
+            return res.status(500).json({
+                origin: 'Personalization',
+                error
+            })
+        }
+    }
+
+    openTasks = async (req, res) => {
+        const { open, close } = req.body
+
+        try {
+            const openings = await this._openTasks(open)
+            const closings = await this._closeTasks(close)
+
+            return res.status(200).json({
+                origin: 'Personalization opening',
+                openings,
+                closings,                
+            })
+        } catch (error) {
+            return res.status(500).json({
+                origin: 'Personalization opening',
+                error
+            })
+        }
+    }
+
     assignTasks = async (req, res) => {
-     
         const { assign, unassign } = req.body
 
         try {
@@ -153,16 +198,59 @@ class PersonalizationController {
                 }
             })
 
-        const deleted = remove.forEach(async (item) => {
+        const deleted = []
+        for (const item of remove) {
             const removed = await Personalization.Model.deleteOne({
                 profile: item.profile,
                 task: item.task,
                 type: 'assignment'
             })
-            return removed
-        })
+            deleted.push(item)
+        }
 
         return deleted;
+    }
+
+    _openTasks = async (items) => {
+        const result = []
+        for (const item of items) {
+            const exists = await Personalization.Model.findOne({
+                _id: item.persId
+            })
+
+            if (!exists) {
+                const { uuid, profile, task } = item
+                const persRecord = await (new Personalization.Model({
+                    uuid,
+                    profile,
+                    opening: task,
+                    type: 'opening',
+                })).save()
+
+                result.push(persRecord)
+            }
+        }
+
+        return result
+    }
+
+    _closeTasks = async (items) => {
+        const result = []
+        for (const item of items) {
+            const exists = await Personalization.Model.findOne({
+                _id: item.persId
+            })
+
+            if (exists) {
+                //delete
+                const deleted = await Personalization.Model.deleteOne({
+                    _id: item.persId
+                })
+                result.push(exists)
+            }
+        }
+
+        return result
     }
 }
 

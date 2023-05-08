@@ -11,7 +11,7 @@ const schema = new mongoose.Schema({
     type: {
         required: true,
         type: String,
-        enum: ['assignment', 'dismiss', 'open'],
+        enum: ['assignment', 'dismiss', 'opening'],
     },
     profile: {
         required: true,
@@ -25,8 +25,8 @@ const schema = new mongoose.Schema({
     dismiss: {
         type: String,
     },
-    open: {
-        type: String,
+    opening: {
+        type: String, // task UUID
     }
 })
 
