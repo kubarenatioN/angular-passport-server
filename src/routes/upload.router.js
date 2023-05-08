@@ -207,9 +207,11 @@ async function moveTrainingTaskToRemote(fromFolder) {
         }
 
     } catch (error) {
-        rmSync(fromFolder, {
-            recursive: true
-        })
+        if (existsSync(fromFolder)) {
+            rmSync(fromFolder, {
+                recursive: true
+            })
+        }
         console.log('Delete training task folder due to cloud upload error:', fromFolder);
         return {
             message: 'Error uploading training files to cloud.',
