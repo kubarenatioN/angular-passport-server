@@ -8,6 +8,7 @@ const { getCurrentUTCTime } = require('../helpers/time.helper');
 const { unlink, readdir } = require('fs/promises');
 const { SELF_ORIGIN } = require('../config/urls');
 const { existsSync, rmSync } = require('fs');
+const { getFilenameWithTimestamp } = require('../helpers/common.helper');
 
 const router = new Router();
 
@@ -222,10 +223,10 @@ async function moveTrainingTaskToRemote(fromFolder) {
 }
 
 async function deleteTempFile(req, res, next) {
-    const { filename, folder } = req.body
+    const { filename, folder, timestamp } = req.body
 
     try {
-        await unlink(`${rootTempUpload}/${folder}/${filename}`)
+        await unlink(`${rootTempUpload}/${folder}/${getFilenameWithTimestamp(filename, timestamp)}`)
         
         return res.status(200).json({
             message: 'Success delete temp file',

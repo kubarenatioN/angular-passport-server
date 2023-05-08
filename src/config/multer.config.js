@@ -1,5 +1,6 @@
 const multer = require('multer');
-const fs = require('fs')
+const fs = require('fs');
+const { getFilenameWithTimestamp } = require('../helpers/common.helper');
 
 const rootUploadsPath = 'tmp/uploads' 
 const uploader = multer({
@@ -13,7 +14,11 @@ const uploader = multer({
             cb(null, folder)
         },
 		filename: (req, file, cb) => {
-			file.originalname = Buffer.from(file.originalname, 'latin1').toString('utf8')
+			// fix russian text in filename
+			const fixedOriginalName = Buffer.from(file.originalname, 'latin1').toString('utf8')			
+
+			file.originalname = getFilenameWithTimestamp(fixedOriginalName, req.body.timestamp)
+
 			cb(null, file.originalname);
 		},
 	}),
