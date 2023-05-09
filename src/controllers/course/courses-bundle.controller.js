@@ -25,19 +25,22 @@ class CoursesBundleController {
   }
 
   get = async (req, res) => {
-    const { authorId, populate } = req.query
+    const { uuids, authorId, populate, courseFields } = req.query
 
     try {
       const query = {}
       if (authorId) {
         query['authorId'] = authorId
       }
+      if (uuids) {
+        query['uuid'] = uuids.split(',')
+      }
 
       let populateObj = populate ?? [
         {
           path: 'courses',
           model: 'Course',
-          select: ['title, uuid']
+          select: courseFields.split(',') ?? ['title', 'uuid']
         },
       ]
 
