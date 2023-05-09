@@ -25,12 +25,23 @@ class CoursesBundleController {
   }
 
   get = async (req, res) => {
-    const { authorId } = req.query
+    const { authorId, populate } = req.query
 
     try {
-      const data = await CoursesBundle.Model.find({
-        authorId
-      })
+      const query = {}
+      if (authorId) {
+        query['authorId'] = authorId
+      }
+
+      let populateObj = populate ?? [
+        {
+          path: 'courses',
+          model: 'Course',
+          select: ['title, uuid']
+        },
+      ]
+
+      const data = await CoursesBundle.Model.find(query).populate(populateObj)
 
       return res.status(200).json({
         message: 'Get bundles.',
