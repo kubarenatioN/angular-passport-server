@@ -18,6 +18,11 @@ router.patch(
     trainingMembershipController.updateEnroll
 )
 
+router.delete(
+    '/enroll',
+    trainingMembershipController.deleteEnroll
+)
+
 router.post(
     '/lookup',
     trainingMembershipController.lookup

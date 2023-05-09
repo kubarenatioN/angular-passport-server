@@ -37,7 +37,14 @@ const schema = new mongoose.Schema({
     },
     competencies: {
         // required: true,
-        type: Object,
+        type: {
+            acquired: {
+                type: [String]
+            },
+            required: {
+                type: [String]
+            },
+        },
     },
     score: {
         type: Number,

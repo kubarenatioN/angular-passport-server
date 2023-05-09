@@ -187,10 +187,12 @@ class TrainingController {
 
                 const userTrainingProfile = profile.student.trainingProfile
 
-                const updateCompetencies = [...new Set([...userTrainingProfile.competencies, ...competencies.acquired])]
+
+                let updateCompetencies = [...userTrainingProfile.competencies, ...competencies.acquired]
+                updateCompetencies = [...new Set([...updateCompetencies])]
 
                 userTrainingProfile.competencies = updateCompetencies
-                userTrainingProfile.trainingHistory.push(trainingResult._id)
+                userTrainingProfile.trainingHistory.push(training._id)
                 await userTrainingProfile.save()
 
                 profile.status = 'completed'

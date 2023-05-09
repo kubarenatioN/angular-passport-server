@@ -110,6 +110,26 @@ class CourseMembershipController {
         }
         
     }
+    
+    deleteEnroll = async (req, res) => {
+        const { trainingId, studentsIds } = req.body
+
+        try {
+            await TrainingProfile.Model.deleteOne({
+                training: trainingId,
+                student: studentsIds
+            })
+
+            return res.status(200).json({
+                origin: 'Delete enrollment',
+                deleted: true,
+            })
+        } catch (error) {
+            return res.status(500).json({
+                origin: 'Delete enrollment'
+            })
+        }
+    }
 
     _enroll = async (studentsIds, trainingId) => {
         const existed = await TrainingProfile.Model.find({
@@ -130,19 +150,6 @@ class CourseMembershipController {
         const inserted = await TrainingProfile.Model.insertMany(trainingProfiles)
 
         return inserted
-    }
-
-    _deleteEnroll = async (studentsIds, trainingId) => {
-        const removed = await TrainingProfile.Model.deleteMany({
-            student: studentsIds,
-            training: trainingId
-        })
-
-        return {
-            removed,
-            studentsIds,
-            trainingId,
-        };
     }
 }
 
