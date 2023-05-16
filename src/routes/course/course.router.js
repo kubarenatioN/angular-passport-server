@@ -23,8 +23,19 @@ router.post(
 );
 
 router.post(
+	'/list',
+	authenticate(),
+    coursesController.list
+);
+
+router.post(
     '/student',
     coursesController.getUserCourses
+)
+
+router.get(
+    '/:courseId/trainings',
+    coursesController.getCourseTrainings
 )
 
 module.exports = router;

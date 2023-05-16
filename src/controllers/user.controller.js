@@ -110,6 +110,7 @@ class UserController {
                 role,
                 _id,
                 permission,
+                trainingProfile,
             } = user;
 
             const payload = {
@@ -119,7 +120,8 @@ class UserController {
                 username,
                 photo,
                 role,
-                permission
+                permission,
+                trainingProfile
             }
 
             const token = signToken(payload, JWT_PRIVATE_KEY);

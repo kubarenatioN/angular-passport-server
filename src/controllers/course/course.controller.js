@@ -72,6 +72,27 @@ class CoursesController {
         return courses;
     }
 
+    list = async (req, res) => {
+        const { options } = req.body
+        const { pagination, filters, fields, sort } = options
+
+        try {
+            const courses = await Course.Model.find({
+
+            })
+
+            return res.status(200).json({
+                message: 'Get list',
+                data: courses
+            })
+        } catch (error) {
+            return res.status(500).json({
+                message: 'Error listing courses',
+                error
+            })
+        }
+    }
+
     publish = async (req, res) => {
         try {
             const { course, masterId } = req.body
@@ -135,6 +156,27 @@ class CoursesController {
         } catch (error) {
             return res.status(500).json({
                 message: 'Error getting user courses.'
+            })
+        }
+    }
+
+    getCourseTrainings = async (req, res) => {
+        const { courseId } = req.params
+
+        try {
+            const trainings = await CourseTraining.Model.find({
+                courseId,
+            }).populate('course')
+
+            return res.status(200).json({
+                message: 'Get course trainings',
+                trainings,
+            })
+
+        } catch (error) {
+            return res.status(500).json({
+                message: 'Error getting course trainings.',
+                trainings: null,
             })
         }
     }
