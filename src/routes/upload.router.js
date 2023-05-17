@@ -284,7 +284,8 @@ async function getFiles(req, res, next) {
             return res.status(200).json(data)
         }
         else if (type === 'temp') {
-            const filesFromFolder = await readdir(`${rootTempUpload}/${folder}`)
+            const readdirPath = `${rootTempUpload}/${folder}`
+            const filesFromFolder = await readdir(readdirPath)
             const files = []
             for (const filename of filesFromFolder) {
                 files.push({

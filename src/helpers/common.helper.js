@@ -6,6 +6,9 @@ const generateUUID = () => {
 }
 
 const getFilenameWithTimestamp = (filename, timestamp) => {
+    if (!timestamp) {
+        return filename
+    }
     const { name, ext } = path.parse(filename)
     return `${name}-${timestamp}${ext}`
 }

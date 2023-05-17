@@ -17,8 +17,12 @@ const uploader = multer({
 			// fix russian text in filename
 			const fixedOriginalName = Buffer.from(file.originalname, 'latin1').toString('utf8')			
 
-			file.originalname = getFilenameWithTimestamp(fixedOriginalName, req.body.timestamp)
-
+			const timestamp = req.body.timestamp
+			if (timestamp) {
+				file.originalname = getFilenameWithTimestamp(fixedOriginalName, timestamp)
+			} else {
+				file.originalname = fixedOriginalName
+			}
 			cb(null, file.originalname);
 		},
 	}),
