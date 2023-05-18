@@ -102,5 +102,15 @@
     {
         "id": "science",
         "label": "Наука"
+    },
+    {
+        "category": "machinery",
+        "id": "mechanics",
+        "label": "Механика"
+    },
+    {
+        "category": "machinery",
+        "id": "electronics",
+        "label": "Электроника"
     }
 ]
