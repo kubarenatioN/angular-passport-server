@@ -27,11 +27,12 @@ const schema = new mongoose.Schema({
     role: {
         required: true,
         type: String,
-        default: userRoles.student,
+        enum: ['user', 'admin'],
+        default: 'user',
     },
     permission: {
         type: String,
-        enum: ['student', 'teacher'],
+        enum: ['student', 'teacher', 'editor', 'admin'],
         default: 'student'
     },
     photo: {

@@ -3,7 +3,7 @@ const crypto = require('crypto');
 const { generateUUID } = require('../helpers/common.helper');
 const User = require('../models/user.model');
 const UserTrainingProfile = require('../models/user-training-profile.model');
-const { signToken, verifyToken } = require('../helpers/token-helper');
+const { signToken, prepareTokenPayload } = require('../helpers/token-helper');
 
 const { JWT_PRIVATE_KEY } = process.env;
 
@@ -12,7 +12,14 @@ class UserController {
     create = async (req, res) => {
 
         try {
-            const { email, password } = req.body;
+            const { email, password, passwordRepeat } = req.body;
+            if (password !== passwordRepeat) {
+                return res.status(400).json({
+                    message: 'Register new user error. Passwords not match.',
+                    user: null,
+                    token: null,
+                })
+            }
             const salt = createSalt();
             const hash = hashPassword(password, salt);
             const uuid = generateUUID()
@@ -20,7 +27,7 @@ class UserController {
             const trainingProfile = await (new UserTrainingProfile.Model({
                 uuid: generateUUID(),
                 competencies: [],
-                finishedTrainigns: [],
+                trainingHistory: [],
             })).save()
 
             const user = new User.Model({
@@ -29,25 +36,35 @@ class UserController {
                 username: email,
                 salt,
                 password: hash,
+                role: 'user',
+                permission: 'student',
                 trainingProfile: trainingProfile._id
             })
             const created = await user.save()
 
+            const payload = prepareTokenPayload(user)
+            const token = signToken(payload, JWT_PRIVATE_KEY);
+
             res.status(200).json({
                 message: 'User created',
+                token,
                 user: {
                     _id: created._id,
                     uuid,
                     email,
                     username: email,
                     role: created.role,
+                    photo: '',// replace by random initial avatar
                     permission: created.permission,
+                    trainingProfile: created.trainingProfile
                 }
             });
 
         } catch (error) {
             return res.status(500).json({
                 message: 'Error registering new user.',
+                user: null,
+                token: null,
             })
         }
 		
@@ -64,7 +81,7 @@ class UserController {
             socialId,
             socialType,
             photo,
-            role: 'student',
+            role: 'user',
             permission: 'student',
         }).save()
 
@@ -102,30 +119,8 @@ class UserController {
                 return handleRequestError(res, 404, 'Incorrect password.')
             }
 
-            const {
-                uuid,
-                email,
-                username,
-                photo,
-                role,
-                _id,
-                permission,
-                trainingProfile,
-            } = user;
-
-            const payload = {
-                _id,
-                uuid,
-                email,
-                username,
-                photo,
-                role,
-                permission,
-                trainingProfile
-            }
-
+            const payload = prepareTokenPayload(user)
             const token = signToken(payload, JWT_PRIVATE_KEY);
-
             return res.status(200).json({
                 token,
                 message: 'Logged in successfully.',

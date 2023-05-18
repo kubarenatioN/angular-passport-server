@@ -22,4 +22,32 @@ const verifyToken = (token, secretKey) => {
     })
 }
 
-module.exports = { signToken, verifyToken }
+/**
+ * 
+ * @param user 
+ */
+const prepareTokenPayload = (user) => {
+    const {
+        _id,
+        uuid,
+        email,
+        username,
+        photo,
+        role,
+        permission,
+        trainingProfile,
+    } = user;
+
+    return {
+        _id,
+        uuid,
+        email,
+        username,
+        photo,
+        role,
+        permission,
+        trainingProfile,
+    }
+}
+
+module.exports = { signToken, verifyToken, prepareTokenPayload }
