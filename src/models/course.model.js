@@ -93,6 +93,7 @@ module.exports = {
                 tests.push(topic.testLink)
             }
         })
+        // course score
         const score = tasks.length * 100 + tests.length * 100
 
         const newRecord = new model({
