@@ -64,6 +64,8 @@ async function moveToRemote(req, res, next) {
         move = await moveTrainingTaskToRemote(fromFolder)
     } else if (subject === 'personalization:task') {
         move = await moveTrainingTaskToRemote(fromFolder)
+    } else if (subject === 'teacher-perms:request-files') {
+        move = await moveFolderToRemote(fromFolder)
     } else {
         return res.status(404).json({
             message: 'Incorrect subject'
@@ -193,7 +195,7 @@ async function moveTrainingTaskToRemote(fromFolder) {
             rmSync(readPath, {
                 recursive: true
             })
-            console.log('removed profile training folder:', readPath);
+            console.log('removed folder:', readPath);
         }
         
         return {
@@ -215,6 +217,80 @@ async function moveTrainingTaskToRemote(fromFolder) {
         console.log('Delete training task folder due to cloud upload error:', fromFolder);
         return {
             message: 'Error uploading training files to cloud.',
+            status: 500,
+            result: {
+                origin: fromFolder,
+                error
+            },
+        }
+    }
+}
+
+async function moveFolderToRemote(fromFolder) {
+    try {
+        const readPath = path.join(globalThis.appRoot, rootTempUpload, fromFolder);
+        if (!existsSync(readPath)) {
+            return {
+                message: 'Nothing to move to cloud. No such folder found.',
+                status: 204,
+                result: {
+                    origin: fromFolder
+                }
+            }
+        }
+
+        const folder = await readdir(readPath)
+        const results = []
+        let total = 0;
+        let success = 0;
+        let removed = 0;
+
+        for (const filename of folder) {
+            total++
+
+            const upload = await uploadSingleFile({ 
+                pathFrom: path.join(readPath, filename), 
+                uploadFolder: fromFolder, 
+                filename
+            })
+
+            if (upload) {
+                results.push(upload)
+                success++
+
+                await unlink(path.join(readPath, filename))
+                removed++
+            }
+        }
+
+         // remove whole profile training tasks folder
+         if (removed === total) {
+            rmSync(readPath, {
+                recursive: true
+            })
+            // console.log('removed folder:', readPath);
+        }
+        
+        return {
+            message: 'Folder files uploaded to cloud.',
+            fromFolder,
+            status: 200,
+            result: {
+                results,
+                total,
+                success,
+            },
+        }
+
+    } catch (error) {
+        if (existsSync(fromFolder)) {
+            rmSync(fromFolder, {
+                recursive: true
+            })
+        }
+        console.log('Delete folder due to cloud upload error:', fromFolder);
+        return {
+            message: 'Error uploading folder files to cloud.',
             status: 500,
             result: {
                 origin: fromFolder,
