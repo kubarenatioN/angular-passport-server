@@ -9,14 +9,42 @@ const TeacherRequest = require('../models/teacher-request.model');
 const router = new Router();
 
 router.get(
-    '/',
+    '/all',
     async (req, res) => {
-        const { id } = req.params
-        const include = req.query
+        try {
+            const users = await User.Model.find({})
+            
+            return res.status(200).json({
+                data: users
+            })
+        } catch (error) {
+            return res.status(500).json({
+                message: 'Error get all users.',
+                error,
+            })
+        }
+    }
+)
 
-        return res.status(200).json({
-            test: true
-        })
+router.get(
+    '/become-teacher',
+    async (req, res) => {
+        try {
+            const requests = await TeacherRequest.Model.find({
+
+            }).populate('user')
+
+            return res.status(200).json({
+                message: 'Get teacher perm requests',
+                data: requests,
+            })
+
+        } catch (error) {
+            return res.status(500).json({
+                message: 'Error get teacher permission requests.',
+                error,
+            })
+        }
     }
 )
 
@@ -82,13 +110,22 @@ router.post(
 )
 
 router.patch(
-    '/become-teacher',
+    '/become-teacher/:id',
     async (req, res) => {
-        const { status, userId } = req.body
+        const { id } = req.params
+        const { status } = req.body
 
         try {
+            if (status === 'approved') {
+                const user = await User.Model.findOne({
+                    _id: id
+                })
+                user.permission = 'teacher'
+                await user.save()
+            }
+
             const request = await TeacherRequest.Model.findOne({
-                user: userId
+                user: id
             })
 
             request.status = status
@@ -115,7 +152,7 @@ router.delete(
 
         try {
             await TeacherRequest.Model.deleteOne({
-                user: id
+                _id: id
             })
 
             return res.status(200).json({
