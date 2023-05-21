@@ -38,7 +38,8 @@ class UserController {
                 password: hash,
                 role: 'user',
                 permission: 'student',
-                trainingProfile: trainingProfile._id
+                trainingProfile: trainingProfile._id,
+                photo: getUserAvatar(email)
             })
             const created = await user.save()
 
@@ -54,7 +55,7 @@ class UserController {
                     email,
                     username: email,
                     role: created.role,
-                    photo: '',// replace by random initial avatar
+                    photo: created.photo,
                     permission: created.permission,
                     trainingProfile: created.trainingProfile
                 }
@@ -155,6 +156,10 @@ function handleRequestError(res, code, message) {
         token: null,
         user: null,
     })
+}
+
+function getUserAvatar(email) {
+    return `https://api.dicebear.com/6.x/fun-emoji/svg?seed=${email}`
 }
 
 const controller = new UserController();

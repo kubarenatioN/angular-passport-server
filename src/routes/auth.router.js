@@ -1,7 +1,7 @@
 const Router = require('express').Router;
 const passport = require('passport');
 const userController = require('../controllers/user.controller');
-const { verifyToken } = require('../helpers/token-helper');
+const { verifyToken, signToken, prepareTokenPayload } = require('../helpers/token-helper');
 const socialSuccessAuth = require('../middlewares/social-auth-success.middleware');
 require('dotenv').config();
 const User = require('../models/user.model')
@@ -53,9 +53,14 @@ router.post('/user', async (req, res) => {
 		}).populate('trainingProfile')
 		delete user._doc.password
 
+		const refreshToken = signToken(
+			prepareTokenPayload(user),
+			process.env.JWT_PRIVATE_KEY
+		)
 		return res.status(200).json({
 			user,
 			message: 'Success auth',
+			refreshToken,
         });
     } catch (error) {
         return res.status(400).json({

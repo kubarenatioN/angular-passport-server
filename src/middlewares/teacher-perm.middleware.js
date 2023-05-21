@@ -1,6 +1,6 @@
 const isTeacher = (req, res, next) => {
-    const { role } = req.user
-    if (role === 'teacher') {
+    const { permission } = req.user
+    if (permission === 'teacher') {
         return next()
     }
 

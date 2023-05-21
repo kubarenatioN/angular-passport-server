@@ -1,5 +1,4 @@
 const Router = require('express').Router;
-const userController = require('../controllers/user.controller');
 const { generateUUID } = require('../helpers/common.helper');
 const authenticate = require('../middlewares/authenticate.middleware');
 const UserTrainingProfile = require('../models/user-training-profile.model');
