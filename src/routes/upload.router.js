@@ -97,9 +97,35 @@ async function moveCourseFolderToRemote(fromFolder, toFolder) {
         let total = 0;
         let success = 0;
         let removed = 0;
+        // folder of type, e.g. 'tasks', 'topics'
         for (const typeFolder of typesFolders) {
-            // folder of type, e.g. 'tasks', 'topics'
-            const filesFolders = await readdir(path.join(readPath, typeFolder))
+            if (typeFolder.startsWith('.')) {
+                continue;
+            }
+
+            const filesFoldersPath = path.join(readPath, typeFolder)
+
+            // Handle poster upload
+            if (filesFoldersPath.includes('/poster')) {
+                const posterFile = (await readdir(filesFoldersPath))[0]
+
+                const uploadFolder = path.join(toFolder, typeFolder)
+                if (posterFile) {
+                    const upload = await uploadSingleFile({ 
+                        pathFrom: path.join(globalThis.appRoot, rootTempUpload, fromFolder, 'poster', posterFile), 
+                        uploadFolder, 
+                        filename: posterFile,
+                    })
+
+                    upload.isPoster = true
+                    results.push(upload)
+                } else {
+                    console.log('No poster file found.');
+                }
+                continue;
+            }
+
+            const filesFolders = await readdir(filesFoldersPath)
             for (const filesFolder of filesFolders) {
                 // closest folder to files, name is a uuid of form control
                 const fromFolder = path.join(readPath, typeFolder, filesFolder)
@@ -300,11 +326,14 @@ async function moveFolderToRemote(fromFolder) {
     }
 }
 
-async function deleteTempFile(req, res, next) {
+async function deleteTempFile(req, res) {
     const { filename, folder, timestamp } = req.body
 
     try {
-        await unlink(`${rootTempUpload}/${folder}/${getFilenameWithTimestamp(filename, timestamp)}`)
+        const removePath = path.join(globalThis.appRoot, rootTempUpload, folder, getFilenameWithTimestamp(filename, timestamp))
+        if (existsSync(removePath)) {
+            await unlink(removePath)
+        }
         
         return res.status(200).json({
             message: 'Success delete temp file',

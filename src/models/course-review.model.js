@@ -18,6 +18,9 @@ const schema = new mongoose.Schema({
         required: true,
         type: String,
     },
+    banner: {
+        type: String,
+    },
     authorId: {
         required: true,
         type: String,
