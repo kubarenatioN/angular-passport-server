@@ -4,6 +4,8 @@ const authenticate = require('../middlewares/authenticate.middleware');
 const UserTrainingProfile = require('../models/user-training-profile.model');
 const User = require('../models/user.model');
 const TeacherRequest = require('../models/teacher-request.model');
+const TrainingProfile = require('../models/training/training-profile.model');
+const ProfileProgress = require('../models/progress/profile-progress.model');
 
 const router = new Router();
 
@@ -190,6 +192,46 @@ router.get(
         } catch (error) {
             return res.status(500).json({
                 message: 'Error get user training profile.'
+            })
+        }
+    }
+)
+
+router.get(
+    '/:id/dashboard',
+    async (req, res) => {
+        const { id } = req.params
+
+        try {
+            const profiles = await TrainingProfile.Model.find({
+                student: id,
+                enrollment: ['approved', 'pending'],
+                // status: 'active'
+            }).populate({
+                path: 'training',
+                model: 'CourseTraining',
+                populate: {
+                    path: 'course',
+                    model: 'Course',
+                    select: ['uuid', 'authorId', 'duration', 'category', 'competencies', 'topics']
+                }
+            })
+
+            const progress = await ProfileProgress.Model.find({
+                profile: profiles.map(p => p._id)
+            })
+
+            return res.status(200).json({
+                origin: 'User dashboard',
+                data: {
+                    profiles,
+                    progress,
+                }
+            })
+            
+        } catch (error) {
+            return res.status(500).json({
+                message: 'Error get user dashboard.'
             })
         }
     }
