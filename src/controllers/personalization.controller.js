@@ -120,7 +120,7 @@ class PersonalizationController {
                 populate: {
                     path: 'course',
                     model: 'Course',
-                    select: ['title']
+                    select: ['title', 'topics']
                 }
             })
 

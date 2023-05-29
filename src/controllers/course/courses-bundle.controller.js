@@ -40,7 +40,7 @@ class CoursesBundleController {
         {
           path: 'courses',
           model: 'Course',
-          select: courseFields?.split(',') ?? ['title', 'uuid']
+          select: courseFields?.split(',') ?? ['title', 'uuid', 'banner']
         },
       ]
 

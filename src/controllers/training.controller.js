@@ -227,12 +227,12 @@ class TrainingController {
             const payload = await verifyToken(token, JWT_PRIVATE_KEY)
             const senderId = payload._id
             const senderUUId = payload.uuid
-            const senderRole = payload.role
+            const senderPerm = payload.permission
 
             const profile = await this._getProfile(req.body)
 
             const isIssuerOwnProfile = senderId === profile?.student._id.toString()
-            const isIssuerTeacher = senderUUId === profile?.training.course.authorId && senderRole === 'teacher'
+            const isIssuerTeacher = senderUUId === profile?.training.course.authorId && senderPerm === 'teacher'
 
             const hasAccess = profile && (isIssuerOwnProfile || isIssuerTeacher)
 

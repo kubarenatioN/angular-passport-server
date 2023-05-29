@@ -4,8 +4,7 @@ const courseReviewController = require('./course-review.contoller')
 const Course = require('../../models/course.model')
 const CourseTraining = require('../../models/training/course-training.model')
 const CourseReview = require('../../models/course-review.model');
-const { generateUUID } = require('../../helpers/common.helper');
-
+const User = require('../../models/user.model');
 
 class CoursesController {
 
@@ -79,6 +78,23 @@ class CoursesController {
         try {
             const courses = await Course.Model.find({
 
+            })
+
+            const trainings = await CourseTraining.Model.find({
+
+            })
+
+            const authors = await User.Model.find({
+                permission: 'teacher'
+            })
+
+            courses.forEach((c, i, arr) => {
+                arr[i]._doc.trainings = trainings.filter(t => t.course.toString() === c._id.toString())
+                const author = authors.find(a => a.uuid === c.authorId)
+                arr[i]._doc.author = {
+                    username: author.username,
+                    photo: author.photo,
+                }
             })
 
             return res.status(200).json({
