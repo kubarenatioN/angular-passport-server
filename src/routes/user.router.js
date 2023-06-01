@@ -213,7 +213,7 @@ router.get(
                 populate: {
                     path: 'course',
                     model: 'Course',
-                    select: ['uuid', 'authorId', 'duration', 'category', 'competencies', 'topics', 'banner']
+                    select: ['uuid', 'authorId', 'duration', 'category', 'competencies', 'topics', 'banner', 'title']
                 }
             })
 
