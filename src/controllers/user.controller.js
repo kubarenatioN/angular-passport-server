@@ -105,10 +105,9 @@ class UserController {
         }
 	}
 
-	findByEmail = async ({email, socialId}) => {
+	findByEmail = async ({email}) => {
         return User.Model.findOne({
-            email,
-            socialId,
+            email
         }).populate('trainingProfile')
 	}
 
