@@ -39,7 +39,6 @@ router.post(
 	moveToRemote
 );
 
-
 router.post(
 	'/temp/delete',
 	authenticate(),
@@ -47,6 +46,8 @@ router.post(
 );
 
 router.get('/files', getFiles)
+
+router.delete('/remote/files', deleteRemoteFiles)
 
 async function moveToRemote(req, res, next) {
     const { fromFolder, subject } = req.body;
@@ -343,6 +344,30 @@ async function deleteTempFile(req, res) {
     } catch (error) {
         return res.status(500).json({
             message: 'Error deleting temp file.'
+        })
+    }
+}
+
+async function deleteRemoteFiles(req, res) {
+    const { files } = req.body
+
+    try {
+        if (files.length === 0) {
+            return res.status(204).json({
+                message: 'No files to bulk delete'
+            })
+        }
+
+        const deleted = await cloudinary.api.delete_resources(files)
+
+        return res.status(200).json({
+            message: 'Deleted files',
+            deleted
+        })
+    } catch (error) {
+        return res.status(500).json({
+            message: 'Bulk delete files error',
+            error,
         })
     }
 }

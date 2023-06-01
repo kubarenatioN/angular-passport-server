@@ -16,6 +16,9 @@ const schema = new mongoose.Schema({
 		type: String,
 		required: true,
 	},
+	files: {
+		type: Array,
+	},
 	status: {
 		type: String,
 		enum: ['pending', 'approved', 'rejected'],

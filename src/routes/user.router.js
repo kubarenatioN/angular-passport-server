@@ -76,7 +76,7 @@ router.get(
 router.post(
     '/become-teacher',
     async (req, res) => {
-        const { userId, motivation } = req.body.request
+        const { userId, motivation, files } = req.body.request
 
         try {
             const user = await User.Model.findOne({
@@ -93,6 +93,7 @@ router.post(
                 uuid: generateUUID(),
                 user: user._id,
                 motivation,
+                files,
                 status: 'pending',
             })).save()
 
