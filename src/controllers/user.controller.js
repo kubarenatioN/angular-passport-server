@@ -75,6 +75,12 @@ class UserController {
         const { email, photo, username, socialId, socialType } = user
         const uuid = generateUUID()
         
+        const trainingProfile = await (new UserTrainingProfile.Model({
+            uuid: generateUUID(),
+            competencies: [],
+            trainingHistory: [],
+        })).save()
+
         const created = await new User.Model({
             uuid,
             email,
@@ -84,15 +90,18 @@ class UserController {
             photo,
             role: 'user',
             permission: 'student',
+            trainingProfile
         }).save()
 
         return {
+            _id: created._id,
             uuid: created.uuid,
             email,
             username,
             photo,
             role: created.role,
             permission: created.permission,
+            trainingProfile: created.trainingProfile
         }
 	}
 
