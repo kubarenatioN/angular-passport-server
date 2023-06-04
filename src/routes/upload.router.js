@@ -65,7 +65,8 @@ async function moveToRemote(req, res, next) {
         move = await moveTrainingTaskToRemote(fromFolder)
     } else if (subject === 'personalization:task') {
         move = await moveTrainingTaskToRemote(fromFolder)
-    } else if (subject === 'teacher-perms:request-files') {
+    } else if (subject === 'teacher-perms:request-files' 
+            || subject === 'competencies-request:files') {
         move = await moveFolderToRemote(fromFolder)
     } else {
         return res.status(404).json({
