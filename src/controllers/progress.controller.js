@@ -17,16 +17,21 @@ class ProgressController {
     }
 
     addRecord = async (req, res) => {
-        const { progressId, records } = req.body
+        const { progressId, records, quiz } = req.body
 
         try {
             const progress = await ProfileProgress.Model.findOne({
                 _id: progressId
             })
 
-            const newRecords = progress.records.concat(...records)
-            
-            progress.records = newRecords
+            if (records && records.length > 0) {
+                const newRecords = progress.records.concat(...records)
+                progress.records = newRecords
+            }
+
+            if (quiz) {
+                progress.quiz = progress.quiz.concat([quiz])
+            }
 
             const added = await progress.save()
 
