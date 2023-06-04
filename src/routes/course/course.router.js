@@ -38,4 +38,9 @@ router.get(
     coursesController.getCourseTrainings
 )
 
+router.get(
+    '/for-bundle',
+    coursesController.getCoursesForBundle
+)
+
 module.exports = router;

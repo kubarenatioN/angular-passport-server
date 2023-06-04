@@ -196,6 +196,41 @@ class CoursesController {
             })
         }
     }
+
+    getCoursesForBundle = async (req, res) => {
+        const { authorId } = req.query
+
+        try {
+            const courses = await Course.Model.find({
+                $or: [
+                    { authorId: authorId },
+                    { allowInBundle: true },
+                ]
+            })
+
+            const teachers = await User.Model.find({
+                permission: 'teacher'
+            })
+
+            courses.forEach((c, i, arr) => {
+                const courseAuthor = teachers.find(t => t.uuid === arr[i].authorId)
+                arr[i]._doc.author = {
+                    photo: courseAuthor.photo,
+                    username: courseAuthor.username
+                }
+            })
+
+            return res.status(200).json({
+                message: 'Ok',
+                data: courses,
+            })
+        } catch (error) {
+            return res.status(500).json({
+                message: 'Error getting courses for bundle.',
+                data: null,
+            })
+        }
+    }
 }
 
 const controller = new CoursesController();

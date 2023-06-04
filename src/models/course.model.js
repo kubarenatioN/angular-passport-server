@@ -57,6 +57,10 @@ const schema = new mongoose.Schema({
         required: false,
         type: Types.ObjectId,
     },
+    allowInBundle: {
+        type: Types.Boolean,
+        default: false,
+    }
 })
 
 const model = mongoose.model('Course', schema, 'courses')

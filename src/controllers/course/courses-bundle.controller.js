@@ -1,8 +1,7 @@
-const Course = require('../../models/course.model')
-const CourseTraining = require('../../models/training/course-training.model')
 const { getCurrentUTCTime } = require('../../helpers/time.helper');
 const { generateUUID } = require('../../helpers/common.helper');
 const CoursesBundle = require('../../models/courses-bundle.model');
+const User = require('../../models/user.model');
 
 
 class CoursesBundleController {
@@ -14,6 +13,19 @@ class CoursesBundleController {
       const bundle = await CoursesBundle.Model.findOne({
         uuid: id
       }).populate('courses')
+
+      const authors = await User.Model.find({
+        permission: 'teacher',
+        uuid: bundle.courses.map(c => c.authorId)
+      })
+
+      bundle.courses.forEach((c, i, arr) => {
+        const courseAuthor = authors.find(a => a.uuid === c.authorId)
+        arr[i]._doc.author = {
+          photo: courseAuthor.photo,
+          username: courseAuthor.username,
+        }
+      })
       
       return res.status(200).json({
         message: 'Get bundle.',
