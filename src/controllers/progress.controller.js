@@ -48,6 +48,23 @@ class ProgressController {
         }
     }
 
+    getProfileProgress = async (req, res) => {
+        const { id } = req.params
+
+        try {
+            const result = await this._getAllProgressByProfile(id)
+
+            return res.status(200).json({
+                progress: result
+            })
+            
+        } catch (error) {
+            return res.status(500).json({
+                error
+            })
+        }
+    }
+
     _getAll = async (req, res) => {
         const { profileId } = req.body
 

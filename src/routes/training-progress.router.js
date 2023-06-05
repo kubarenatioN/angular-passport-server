@@ -8,6 +8,11 @@ router.post(
     progressController.get
 )
 
+router.get(
+    '/profile/:id',
+    progressController.getProfileProgress
+)
+
 router.patch(
     '/add',
     progressController.addRecord

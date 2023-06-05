@@ -3,9 +3,9 @@ const Types = mongoose.Schema.Types;
 
 const schema = new mongoose.Schema({
     uuid: {
-        required: true,
-        type: String,
-        unique: true,
+      required: true,
+      type: String,
+      unique: true,
     },
     profile: {
       required: true,

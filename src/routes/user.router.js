@@ -6,6 +6,7 @@ const User = require('../models/user.model');
 const TeacherRequest = require('../models/teacher-request.model');
 const TrainingProfile = require('../models/training/training-profile.model');
 const ProfileProgress = require('../models/progress/profile-progress.model');
+const TrainingResult = require('../models/training/training-result.model')
 const becomeTeacherRouter = require('./user/become-teacher.router')
 const competenciesRouter = require('./user/competencies.router')
 
@@ -118,6 +119,68 @@ router.get(
             return res.status(500).json({
                 message: 'Error get user by id.',
                 error,
+            })
+        }
+    }
+)
+
+router.get(
+    '/results/:id',
+    async (req, res) => {
+        const { id } = req.params
+
+        try {
+            const user = await User.Model.findOne({
+                _id: id
+            })
+
+            const userTrainingProfile = await UserTrainingProfile.Model.findOne({
+                _id: user.trainingProfile
+            })
+
+            const completedTrainings = userTrainingProfile.trainingHistory
+
+            const trainingResults = await TrainingResult.Model.find({
+                _id: completedTrainings
+            }).populate('profile')
+
+            const currentTrainingProfiles = await TrainingProfile.Model.find({
+                student: user._id
+            }).populate({
+                path: 'training',
+                model: 'CourseTraining',
+            })
+
+            // console.log(trainingResults);
+            // console.log(currentTrainingProfiles);
+
+            const progress = await ProfileProgress.Model.find({
+                $or: [
+                    { profile: currentTrainingProfiles.map(p => p._id) },
+                    { profile: trainingResults.map(res => res.profile._id) },
+                ]
+            }).populate({
+                path: 'profile',
+                model: 'TrainingProfile',
+                populate: {
+                    path: 'training',
+                    model: 'CourseTraining',
+                    populate: {
+                        path: 'course',
+                        model: 'Course'
+                    }
+                }
+            })
+
+            return res.status(200).json({
+                message: 'Ok',
+                completed: trainingResults,
+                current: currentTrainingProfiles,
+                progress
+            })
+        } catch (error) {
+            return res.status(500).json({
+                error
             })
         }
     }
