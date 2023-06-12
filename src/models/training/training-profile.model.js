@@ -1,4 +1,5 @@
 const mongoose = require('mongoose')
+const trainingResultModel = require('./training-result.model')
 const Types = mongoose.Schema.Types
 
 const schema = new mongoose.Schema({
@@ -26,6 +27,16 @@ const schema = new mongoose.Schema({
         type: String,
         enum: ['completed', 'active'],
         default: 'active',
+    },
+    bestScore: {
+        type: Types.Number,
+        required: true,
+        default: 0,
+    },
+    lastScore: {
+        type: Types.Number,
+        required: true,
+        default: 0,
     }
 })
 

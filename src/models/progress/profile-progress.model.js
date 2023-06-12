@@ -66,6 +66,16 @@ const schema = new mongoose.Schema({
     },
     quiz: {
         type: [profileQuizRecordSchema]
+    },
+    bestScore: {
+        type: Types.Number,
+        required: true,
+        default: 0,
+    },
+    lastScore: {
+        type: Types.Number,
+        required: true,
+        default: 0,
     }
 })
 

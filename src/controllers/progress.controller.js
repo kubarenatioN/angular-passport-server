@@ -1,4 +1,5 @@
 const { generateUUID } = require('../helpers/common.helper')
+const { getCurrentUTCTime } = require('../helpers/time.helper')
 const ProfileProgress = require('../models/progress/profile-progress.model')
 const TrainingProfile = require('../models/training/training-profile.model')
 
@@ -33,7 +34,27 @@ class ProgressController {
                 progress.quiz = progress.quiz.concat([quiz])
             }
 
+            const { records: progressRecords } = await this._calculateProgressScore(progress)
+            console.log('progressRecords', progressRecords);
+            progress.bestScore = progressRecords.bestScore
+            progress.lastScore = progressRecords.lastScore
+
             const added = await progress.save()
+
+            const profileId = progress.profile
+
+            console.log(`=== === CALCULATE PROFILE ${profileId} START ===`);
+
+            const { records: profileScore } = await this._calculateProfileScore(profileId)
+            console.log(profileScore);
+            const profileObj = await TrainingProfile.Model.findOne({
+                _id: profileId,
+            })
+            profileObj.bestScore = profileScore.bestScore
+            profileObj.lastScore = profileScore.lastScore
+            await profileObj.save()
+
+            console.log(`=== === CALCULATE PROFILE ${profileId} END ===`);
 
             return res.status(200).json({
                 message: 'Records added.',
@@ -43,6 +64,85 @@ class ProgressController {
         } catch (error) {
             return res.status(500).json({
                 message: 'Service error: add progress record.',
+                error,
+            })
+        }
+    }
+
+    addQuizRecord = async (req, res) => {
+        try {
+      
+            const { mark, ID: idCombination } = req.body
+            if (!(mark && mark.length > 0)  || !idCombination) {
+                return res.status(404).json({
+                    message: 'No id combination or mark provided',
+                    mark,
+                    id: idCombination
+                })
+            }
+        
+            const [ profileId, topicId ] = idCombination[0].split('#')
+            if (!profileId || !topicId) {
+                return res.status(404).json({
+                    message: 'No profile id or topic id provided',
+                    profileId,
+                    topicId
+                })
+            }
+        
+            const markNum = +mark[0].split('/')[0] / +mark[0].split('/')[1]
+            const quizRecord = {
+                uuid: generateUUID(),
+                mark: markNum,
+                date: getCurrentUTCTime()
+            }
+        
+            const profile = await TrainingProfile.Model.findOne({
+                uuid: profileId
+            })
+        
+            if (!profile) {
+                return res.status(404).json({
+                    message: 'No profile found by provided uuid.'
+                })
+            }
+        
+            const profileProgress = await ProfileProgress.Model.findOne({
+                profile: profile._id,
+                topicId,
+            })
+        
+            if (!profileProgress) {
+                return res.status(404).json({
+                    message: 'No profile progress found for topic uuid.'
+                })
+            }
+        
+            profileProgress.quiz.push(quizRecord)
+        
+            const { records: progressRecords } = await this._calculateProgressScore(profileProgress)
+            console.log('[quiz] progressRecords', progressRecords);
+            profileProgress.bestScore = progressRecords.bestScore
+            profileProgress.lastScore = progressRecords.lastScore
+
+            // Save profile progress
+            const updated = await profileProgress.save()
+
+            console.log(`=== === CALCULATE PROFILE ${profileId} START ===`);
+            const { records } = await this._calculateProfileScore(profileId)
+            profile.bestScore = records.bestScore
+            profile.lastScore = records.lastScore
+            await profile.save()
+            console.log(`=== === CALCULATE PROFILE ${profileId} END ===`);
+
+            return res.status(200).json({
+                message: 'Saved quiz result.',
+                updated,
+            })
+      
+        } catch (error) {
+            return res.status(500).json({
+                message: 'Error saving quiz results',
                 error,
             })
         }
@@ -147,6 +247,92 @@ class ProgressController {
         })
     }
 
+    _calculateProfileScore = async (profileId) => {
+        try {
+            const profiles = await ProfileProgress.Model.find({
+                profile: profileId
+            })
+
+            let bestRecordsScore = 0
+            let lastRecordsScore = 0
+
+            for (const p of profiles) {
+                console.log(`=== CALCULATE PROGRESS ${p.uuid} START ===`);
+                const { records } = await this._calculateProgressScore(p)
+                const { bestScore, lastScore } = records
+                bestRecordsScore += bestScore
+                lastRecordsScore += lastScore
+                console.log(`=== CALCULATE PROGRESS ${p.uuid} END ===`);
+            }
+            
+            const quiz = null
+
+            return {
+                records: {
+                    bestScore: bestRecordsScore,
+                    lastScore: lastRecordsScore,
+                },
+                quiz
+            }
+
+        } catch (error) {
+            
+        }
+    }
+
+    _calculateProgressScore = async (progress) => {
+        try {
+            const { records, quiz } = progress
+
+            const recordsLastSum = [...records].sort((a, b) => {
+                return new Date(b.date).getTime() - new Date(a.date).getTime()
+            }).reduce((acc, record) => {
+                if (acc.findIndex(r => r.taskId === record.taskId) === -1) {
+                    acc.push(record)
+                }
+
+                return acc;
+            }, []).reduce((score, r) => {
+                score = score + r.mark
+                return score
+            }, 0)
+
+            let recordsBestSum = records.reduce((acc, record) => {
+                if (acc[record.taskId]) {
+                    acc[record.taskId].push(record)
+                } else {
+                    acc[record.taskId] = [record]
+                }
+
+                return acc;
+            }, {})
+
+            const keys = Object.keys(recordsBestSum)
+            keys.forEach(taskId => {
+                const max = recordsBestSum[taskId].reduce((max, it) => {
+                    if (max && max.mark < it.mark) {
+                        max = it
+                    }
+                    return max;
+                }, recordsBestSum[taskId][0])
+                recordsBestSum[taskId] = max
+            })
+
+            recordsBestSum = keys.reduce((score, key) => recordsBestSum[key].mark + score, 0)
+
+            console.log('recordsLastSum', recordsLastSum);
+            console.log('recordsBestSum', recordsBestSum);
+
+            return {
+                records: {
+                    lastScore: recordsLastSum,
+                    bestScore: recordsBestSum,
+                }
+            }
+        } catch (error) {
+            
+        }
+    }
 }
 
 const controller = new ProgressController()
