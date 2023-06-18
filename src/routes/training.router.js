@@ -52,6 +52,11 @@ router.post(
 );
 
 router.post(
+    '/profiles-progress',
+    trainingController.getProfiles
+);
+
+router.post(
     '/discussion',
     trainingController.getDiscussionThread
 )

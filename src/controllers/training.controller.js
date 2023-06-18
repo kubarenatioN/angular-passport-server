@@ -228,7 +228,7 @@ class TrainingController {
             const senderId = payload._id
             const senderUUId = payload.uuid
             const senderPerm = payload.permission
-
+            
             const profile = await this._getProfile(req.body)
 
             const isIssuerOwnProfile = senderId === profile?.student._id.toString()
@@ -259,6 +259,27 @@ class TrainingController {
             console.error(error);
             return res.status(500).json({
                 message: 'Error getting training profile.',
+                profile: null
+            })                
+        }
+    }
+
+    getProfiles = async (req, res) => {
+        const include = decodeURIComponent(req.query.include).split(',')
+
+        try {
+            const data = await this._getProfileProgress(include, req)
+
+            return res.status(200).json({
+                message: 'Get training profiles.',
+                hasAccess: data.hasAccess,
+                result: data.result,
+            })
+    
+        } catch (error) {
+            console.error(error);
+            return res.status(500).json({
+                message: 'Error getting training profiles.',
                 profile: null
             })                
         }
@@ -468,6 +489,52 @@ class TrainingController {
         const created = await newProfile.save()
 
         return created
+    }
+
+    _getProfileProgress = async (include, req) => {
+        const token = req.headers.authorization
+        const payload = await verifyToken(token, JWT_PRIVATE_KEY)
+        const senderId = payload._id
+        const senderUUId = payload.uuid
+        const senderPerm = payload.permission
+
+        const profilesIds = req.body.profiles
+        const result = []
+        const profiles = []
+
+        for (const p of profilesIds) {
+            const res = await this._getProfile(p)            
+            profiles.push(res)
+        }
+
+        const isIssuerTeacher = senderUUId === profiles[0]?.training.course.authorId && senderPerm === 'teacher'
+
+        const hasAccess = isIssuerTeacher
+
+        if (include.includes('progress')) {
+            for (const profile of profiles) {   
+                const profileId = profile._id.toString()
+                const progress = await progressController._getAllProgressByProfile(profileId)
+                result.push({
+                    profile,
+                    progress,
+                })
+            }
+        }
+
+        if (include.includes('personalization')) {
+            for (const profile of profiles) {   
+                const personalization = await Personalization.Model.find({
+                    profile: profile._id
+                }).populate('task')
+                result.find(r => r.profile._id === profile._id).personalization = personalization
+            }
+        }
+
+        return {
+            result,
+            hasAccess,
+        };
     }
 }
 
